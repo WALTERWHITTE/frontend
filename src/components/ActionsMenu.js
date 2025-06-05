@@ -6,7 +6,7 @@ const ActionsMenu = ({ isOpen, onToggle, onSelect }) => {
   const navigate = useNavigate();
   <button
   onClick={() => {
-    onToggle(); // (if needed)
+    onToggle();
     onSelect('clientDetails');
     navigate('/client-details');
   }}
