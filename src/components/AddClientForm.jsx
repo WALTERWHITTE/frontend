@@ -1,21 +1,20 @@
 import React, { useState } from 'react';
 
-const AddClientForm = ({ onClose }) => {
+const AddClientForm = ({ onClose, onAddClient }) => {
   const [formData, setFormData] = useState({
     name: '',
-    gender: '',
+    company: '',
+    email: '',
+    phone: '',
     dob: '',
-    id: '',
-    product: '',
+    gender: '',
+    clientId: '',
+    productType: 'Loan'
   });
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Client Data:', formData);
+    onAddClient(formData);
     onClose();
   };
 
@@ -28,14 +27,57 @@ const AddClientForm = ({ onClose }) => {
           name="name"
           placeholder="Client Name"
           value={formData.name}
-          onChange={handleChange}
+          onChange={(e) => setFormData({...formData, name: e.target.value})}
+          className="w-full px-4 py-2 border rounded-md"
+          required
+        />
+        <input
+          type="text"
+          name="company"
+          placeholder="Company"
+          value={formData.company}
+          onChange={(e) => setFormData({...formData, company: e.target.value})}
+          className="w-full px-4 py-2 border rounded-md"
+          required
+        />
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={(e) => setFormData({...formData, email: e.target.value})}
+          className="w-full px-4 py-2 border rounded-md"
+          required
+        />
+        <input
+          type="tel"
+          name="phone"
+          placeholder="Phone"
+          value={formData.phone}
+          onChange={(e) => setFormData({...formData, phone: e.target.value})}
+          className="w-full px-4 py-2 border rounded-md"
+        />
+        <input
+          type="date"
+          name="dob"
+          placeholder="Date of Birth"
+          value={formData.dob}
+          onChange={(e) => setFormData({...formData, dob: e.target.value})}
+          className="w-full px-4 py-2 border rounded-md"
+        />
+        <input
+          type="text"
+          name="clientId"
+          placeholder="Client ID"
+          value={formData.clientId}
+          onChange={(e) => setFormData({...formData, clientId: e.target.value})}
           className="w-full px-4 py-2 border rounded-md"
           required
         />
         <select
           name="gender"
           value={formData.gender}
-          onChange={handleChange}
+          onChange={(e) => setFormData({...formData, gender: e.target.value})}
           className="w-full px-4 py-2 border rounded-md"
           required
         >
@@ -44,32 +86,18 @@ const AddClientForm = ({ onClose }) => {
           <option value="Female">Female</option>
           <option value="Other">Other</option>
         </select>
-        <input
-          type="date"
-          name="dob"
-          value={formData.dob}
-          onChange={handleChange}
+        <select
+          name="productType"
+          value={formData.productType}
+          onChange={(e) => setFormData({...formData, productType: e.target.value})}
           className="w-full px-4 py-2 border rounded-md"
           required
-        />
-        <input
-          type="text"
-          name="id"
-          placeholder="Client ID"
-          value={formData.id}
-          onChange={handleChange}
-          className="w-full px-4 py-2 border rounded-md"
-          required
-        />
-        <input
-          type="text"
-          name="product"
-          placeholder="Product"
-          value={formData.product}
-          onChange={handleChange}
-          className="w-full px-4 py-2 border rounded-md"
-          required
-        />
+        >
+          <option value="Loan">Loan</option>
+          <option value="Investment">Investment</option>
+          <option value="Finance">Finance</option>
+          <option value="Insurance">Insurance</option>
+        </select>
         <div className="flex justify-end gap-4">
           <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 rounded">
             Cancel

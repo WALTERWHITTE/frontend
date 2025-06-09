@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import '../App.css';
-import clients from '../data/clients';
+import initialClients from '../data/clients';
+import { v4 as uuidv4 } from 'uuid';
 import logs from '../data/log';
-import ClientDetailsTable from '../data/clientdetailstable';
 import { getStatusColor, getLogStatusColor } from '../utils/utils';
 import ActionsMenu from './ActionsMenu';
 import AddClientForm from './AddClientForm';
-import { Search, Users, Bookmark, Edit, Trash2, Plus} from 'lucide-react';
+import { Search, Users, Bookmark, Edit, Trash2, Plus, Copy } from 'lucide-react';
 
 const ClientDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,6 +14,14 @@ const ClientDashboard = () => {
   const [currentView, setCurrentView] = useState('logs');
   const [showAddForm, setShowAddForm] = useState(false);
 
+  const [clients, setClients] = useState(initialClients);
+
+  const handleCopy = (client) => {
+    const text = `Name: ${client.name}\nCompany: ${client.company}\nClient ID: ${client.clientId}\nProduct: ${client.productType}`;
+    navigator.clipboard.writeText(text)
+      .catch(err => console.error('Failed to copy:', err));
+  };
+  
   const filteredClients = clients.filter(
     client =>
       client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -24,7 +32,22 @@ const ClientDashboard = () => {
     <div className="min-h-screen bg-gray-50" onClick={() => setIsActionsOpen(false)}>
     {showAddForm && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <AddClientForm onClose={() => setShowAddForm(false)} />
+    <AddClientForm 
+      onClose={() => setShowAddForm(false)}
+      onAddClient={(newClient) => {
+        const clientWithId = {
+          ...newClient,
+          id: uuidv4(),
+          status: 'active',
+          phone: newClient.phone || 'Not provided',
+          dob: newClient.dob || 'N/A',
+          gender: newClient.gender || 'Not specified',
+          clientId: newClient.clientId || 'CL-000',
+          productType: newClient.productType || 'General'
+        };
+        setClients(prev => [...prev, clientWithId]);
+      }}
+    />
   </div>
 )}
 
@@ -130,8 +153,17 @@ const ClientDashboard = () => {
               {filteredClients.map((client) => (
                 <div key={client.id} className="p-6 transition-shadow bg-white border border-gray-200 rounded-lg hover:shadow-md">
                   <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{client.name}</h3>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-lg font-semibold text-gray-900">{client.name}</h3>
+                        <button 
+                          onClick={() => handleCopy(client)}
+                          className="text-gray-400 transition-colors hover:text-gray-600"
+                          title="Copy client details"
+                        >
+                          <Copy size={14} />
+                        </button>
+                      </div>
                       <p className="text-sm text-gray-600">{client.company}</p>
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium text-white ${getStatusColor(client.status)}`}>
@@ -139,15 +171,37 @@ const ClientDashboard = () => {
                     </span>
                   </div>
 
-                  <div className="mb-6 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-500">Email:</span>
-                      <span className="text-sm text-blue-600 cursor-pointer hover:underline">{client.email}</span>
+                  <div className="grid grid-cols-2 mb-4 text-sm gap-x-4 gap-y-2">
+                    <div className="flex items-center gap-1 truncate">
+                      <span className="text-xs text-gray-500">ID:</span>
+                      <span className="font-mono text-xs text-gray-700 truncate">{client.clientId}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-500">Phone:</span>
-                      <span className="text-sm text-gray-700">{client.phone}</span>
+                    <div className="flex items-center gap-1 truncate">
+                      <span className="text-xs text-gray-500">Phone:</span>
+                      <span className="text-xs text-gray-700 truncate">{client.phone}</span>
                     </div>
+                    <div className="flex items-center gap-1 truncate">
+                      <span className="text-xs text-gray-500">DOB:</span>
+                      <span className="text-xs text-gray-700">{new Date(client.dob).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center gap-1 truncate">
+                      <span className="text-xs text-gray-500">Gender:</span>
+                      <span className="text-xs text-gray-700 capitalize">{client.gender}</span>
+                    </div>
+                    <div className="flex items-center col-span-2 gap-1">
+                      <span className="text-xs text-gray-500">Product:</span>
+                      <span className={`px-2 py-1 text-[0.7rem] font-medium rounded-full ${
+                        client.productType === 'Loan' ? 'bg-green-100 text-green-800' :
+                        client.productType === 'Investment' ? 'bg-blue-100 text-blue-800' :
+                        client.productType === 'Finance' ? 'bg-purple-100 text-purple-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {client.productType}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <span className="text-xs text-blue-600 cursor-pointer hover:underline">{client.email}</span>
                   </div>
 
                   <div className="flex gap-3">
@@ -171,7 +225,6 @@ const ClientDashboard = () => {
             )}
           </>
         )}
-        {currentView === 'clientDetails' && <ClientDetailsTable />}
       </div>
     </div>
   );
