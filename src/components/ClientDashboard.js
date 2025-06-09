@@ -55,7 +55,7 @@ const ClientDashboard = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-gray-900">Client Dashboard</h1>
           <button onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2 px-4 py-2 text-white transition-colors bg-gray-900 rounded-lg hover:bg-gray-800"
+            className="flex items-center gap-2 px-4 py-2 text-white transition-all duration-300 bg-gray-900 rounded-lg hover:bg-gray-800 hover:scale-105 hover:shadow-md"
           >
           <Plus size={16} />
             Add Client
@@ -151,7 +151,7 @@ const ClientDashboard = () => {
           <>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredClients.map((client) => (
-                <div key={client.id} className="p-6 transition-shadow bg-white border border-gray-200 rounded-lg hover:shadow-md">
+                <div key={client.id} className="p-6 transition-all duration-300 bg-white border border-gray-200 rounded-lg hover:shadow-lg hover:-translate-y-1">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
