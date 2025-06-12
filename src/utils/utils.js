@@ -1,4 +1,6 @@
-import clients from "../data/clients";
+// utils.js
+
+import { fetchClients } from "../data/clients"; // Make sure this path is correct
 
 export const getStatusColor = (status) => {
   switch (status) {
@@ -24,4 +26,5 @@ export const getLogStatusColor = (status) => {
   }
 };
 
-export default clients;
+// Export fetchClients if you want to use it elsewhere from this file
+export { fetchClients };

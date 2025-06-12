@@ -1,143 +1,333 @@
-import React, { useState } from 'react';
-import '../App.css';
-import initialClients from '../data/clients';
-import { v4 as uuidv4 } from 'uuid';
-import logs from '../data/log';
-import { getStatusColor, getLogStatusColor } from '../utils/utils';
-import ActionsMenu from './ActionsMenu';
+import React, { useEffect, useState } from 'react';
+import {
+  Search, Users, Copy, Edit, Trash2, Plus, Bookmark
+} from 'lucide-react';
 import AddClientForm from './AddClientForm';
-import { Search, Users, Bookmark, Edit, Trash2, Plus, Copy } from 'lucide-react';
+import ActionsMenu from './ActionsMenu';
+import { fetchClients, updateClient, deleteClientById } from '../data/clients';
+import { fetchLogs } from '../data/log';
+import { getLogStatusColor } from '../utils/utils';
 
 const ClientDashboard = () => {
+  const [clients, setClients] = useState([]);
+  const [logs, setLogs] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentView, setCurrentView] = useState('clients');
   const [isActionsOpen, setIsActionsOpen] = useState(false);
-  const [currentView, setCurrentView] = useState('logs');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [editingClient, setEditingClient] = useState(null);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+  // Persist dark mode in localStorage
+  const storedMode = localStorage.getItem('isDarkMode');
+  return storedMode ? JSON.parse(storedMode) : false;
+});
 
-  const [clients, setClients] = useState(initialClients);
+// Persist to localStorage on toggle
+useEffect(() => {
+  localStorage.setItem('isDarkMode', JSON.stringify(isDarkMode));
+}, [isDarkMode]);
+
+
+  useEffect(() => {
+    loadClients();
+  }, []);
+
+  useEffect(() => {
+    if (currentView === 'logs') {
+      loadLogs();
+    }
+  }, [currentView]);
+
+  const loadClients = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const data = await fetchClients(token);
+      setClients(data);
+    } catch (error) {
+      console.error('Failed to fetch clients:', error);
+    }
+  };
+
+  const loadLogs = async () => {
+  try {
+    const rawLogs = await fetchLogs();
+
+    if (!Array.isArray(rawLogs)) {
+      console.error('Logs response not an array:', rawLogs);
+      throw new Error('Invalid logs format');
+    }
+
+    const transformed = rawLogs.map((log) => ({
+      logId: `LOG${log.logId.toString().padStart(3, '0')}`,
+      userId: `USR${log.userId?.toString().padStart(3, '0') || '000'}`,
+      timestamp: new Date(log.timestamp).toLocaleString(),
+      action: log.action,
+      description: log.description,
+      username: log.username || 'Unknown',
+      status: /(fail|error|denied|unauthorized|insufficient)/i.test(log.description)
+        ? 'Failed'
+        : 'Success',
+    }));
+
+    setLogs(transformed);
+  } catch (error) {
+    console.error('Error fetching logs:', error);
+  }
+};
+
+
+  const handleEdit = (client) => {
+    setEditingClient(client);
+    setShowAddForm(true);
+  };
+
+  const handleDelete = async (clientId) => {
+    if (!window.confirm('Are you sure you want to delete this client?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      await deleteClientById(token, clientId);
+      setClients((prev) => prev.filter((c) => c.clientId !== clientId));
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert('Failed to delete client.');
+    }
+  };
 
   const handleCopy = (client) => {
-    const text = `Name: ${client.name}\nCompany: ${client.company}\nClient ID: ${client.clientId}\nProduct: ${client.productType}`;
-    navigator.clipboard.writeText(text)
-      .catch(err => console.error('Failed to copy:', err));
+    const text = `
+Client ID: ${client.clientId}
+Name: ${client.clientName}
+Email: ${client.clientEmail}
+Contact: ${client.clientContact}
+DOB: ${client.clientDob}
+Profession: ${client.clientProfession}
+Gender: ${client.clientGender}
+Family ID: ${client.familyId}
+Family Head: ${client.familyHead}
+Created At: ${client.createdAt}
+Updated At: ${client.updatedAt}
+    `;
+    navigator.clipboard.writeText(text).catch(console.error);
   };
-  
-  const filteredClients = clients.filter(
-    client =>
-      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.company.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
-  return (
-    <div className="min-h-screen bg-gray-50" onClick={() => setIsActionsOpen(false)}>
-    {showAddForm && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <AddClientForm 
-      onClose={() => setShowAddForm(false)}
-      onAddClient={(newClient) => {
-        const clientWithId = {
-          ...newClient,
-          id: uuidv4(),
-          status: 'active',
-          phone: newClient.phone || 'Not provided',
-          dob: newClient.dob || 'N/A',
-          gender: newClient.gender || 'Not specified',
-          clientId: newClient.clientId || 'CL-000',
-          productType: newClient.productType || 'General'
-        };
-        setClients(prev => [...prev, clientWithId]);
-      }}
-    />
+  const handleFormSubmit = async (formClient) => {
+    const token = localStorage.getItem('token');
+    const payload = {
+      name: formClient.clientName,
+      email: formClient.clientEmail,
+      contact: formClient.clientContact,
+      dob: formClient.clientDob
+        ? new Date(formClient.clientDob).toISOString().split('T')[0]
+        : null,
+      profession: formClient.clientProfession,
+      gender: formClient.clientGender,
+    };
+
+    try {
+      if (editingClient) {
+        await updateClient(token, editingClient.clientId, payload);
+      }
+      const updated = await fetchClients(token);
+      setClients(updated);
+    } catch (err) {
+      console.error('Submit error:', err);
+      alert('Failed to save client.');
+    } finally {
+      setShowAddForm(false);
+      setEditingClient(null);
+    }
+  };
+
+  const filteredClients = clients.filter((c) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      c.clientName?.toLowerCase().includes(term) ||
+      c.clientEmail?.toLowerCase().includes(term) ||
+      String(c.clientContact || '').includes(term) ||
+      String(c.clientId || '').includes(term)
+    );
+  });
+
+  const detailItem = (label, value) => (
+  <div className="flex justify-between gap-2 truncate">
+    <span className="text-xs text-gray-500">{label}:</span>
+    <span className="text-xs text-gray-400 font-medium truncate">{value}</span>
   </div>
-)}
 
-      <div className="px-6 py-4 bg-white border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900">Client Dashboard</h1>
-          <button onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2 px-4 py-2 text-white transition-all duration-300 bg-gray-900 rounded-lg hover:bg-gray-800 hover:scale-105 hover:shadow-md"
+);
+
+return (
+  <div className={`${isDarkMode ? 'dark' : ''}`}>
+    <div
+      className={`min-h-screen transition-colors duration-500 ${
+        isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
+      }`}
+      onClick={() => setIsActionsOpen(false)}
+    >
+      {/* Dark Mode Toggle - centered at top */}
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
+        <button
+          onClick={() => setIsDarkMode(!isDarkMode)}
+          className="px-3 py-1 text-sm font-medium border rounded shadow-sm transition-all duration-300 
+            hover:scale-105 active:scale-95 
+            bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
+        >
+          {isDarkMode ? '🌙 Dark' : '☀️ Light'}
+        </button>
+      </div>
+
+      {/* Add Client Modal */}
+      {showAddForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm animate-fadeIn">
+          <AddClientForm
+            onClose={() => {
+              setShowAddForm(false);
+              setEditingClient(null);
+            }}
+            darkMode={isDarkMode}
+            onAddClient={handleFormSubmit}
+            existingClient={editingClient}
+          />
+        </div>
+      )}
+
+      {/* Client Detail Modal */}
+      {selectedClient && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm animate-fadeIn"
+          onClick={() => setSelectedClient(null)}
+        >
+          <div
+            className={`relative w-full max-w-md p-6 rounded-lg shadow-xl transform transition-all duration-300 
+              ${isDarkMode ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'}`}
+            onClick={(e) => e.stopPropagation()}
           >
-          <Plus size={16} />
+            <button
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              onClick={() => setSelectedClient(null)}
+            >
+              ✕
+            </button>
+            <h2 className="mb-4 text-xl font-bold">{selectedClient.clientName}'s Details</h2>
+            <div className="grid grid-cols-1 gap-3 text-sm text-gray-700 dark:text-gray-200">
+              {detailItem('Client ID', selectedClient.clientId)}
+              {detailItem('Email', selectedClient.clientEmail)}
+              {detailItem('Contact', selectedClient.clientContact)}
+              {detailItem('DOB', new Date(selectedClient.clientDob).toLocaleDateString())}
+              {detailItem('Gender', selectedClient.clientGender)}
+              {detailItem('Profession', selectedClient.clientProfession)}
+              {detailItem('Family ID', selectedClient.familyId)}
+              {detailItem('Family Head', selectedClient.familyHead === 1 ? 'Yes' : 'No')}
+              {detailItem('Created At', new Date(selectedClient.createdAt).toLocaleString())}
+              {detailItem('Updated At', new Date(selectedClient.updatedAt).toLocaleString())}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div
+        className={`px-6 py-4 border-b ${
+          isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold">Client Dashboard</h1>
+          <button
+            onClick={() => {
+              setShowAddForm(true);
+              setEditingClient(null);
+            }}
+            className="flex items-center gap-2 px-4 py-2 text-white bg-gray-900 rounded-lg hover:bg-gray-800"
+          >
+            <Plus size={16} />
             Add Client
           </button>
-
         </div>
       </div>
 
+      {/* Main Section */}
       <div className="p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <Users className="text-gray-500" size={20} />
+            <Users className="text-gray-500 dark:text-gray-300" size={20} />
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold">
                 {currentView === 'logs' ? 'Database Logs' : 'Clients'}
               </h2>
-              <p className="text-sm text-gray-500">
-                {currentView === 'logs' ? 'System activity and operations log' : 'Manage your clients'}
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {currentView === 'logs'
+                  ? 'System activity and operations log'
+                  : 'Manage your clients'}
               </p>
             </div>
           </div>
           {currentView === 'clients' && (
             <div className="relative">
-              <Search className="absolute text-gray-400 transform -translate-y-1/2 left-3 top-1/2" size={16} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input
                 type="text"
                 placeholder="Search clients..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-64 py-2 pl-10 pr-4 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-64 py-2 pl-10 pr-4 border rounded-lg outline-none transition 
+                  focus:ring-2 focus:ring-blue-500
+                  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
               />
             </div>
           )}
         </div>
-            
+
         <div className="flex items-center justify-between mb-6">
           <ActionsMenu
             isOpen={isActionsOpen}
             onToggle={() => setIsActionsOpen(!isActionsOpen)}
             onSelect={(view) => {
-            setCurrentView(view);
-            setIsActionsOpen(false);
-          }}
+              setCurrentView(view);
+              setIsActionsOpen(false);
+            }}
+            isDarkMode={isDarkMode}
           />
-        
-          <div className="flex items-center gap-2 text-gray-600 cursor-pointer hover:text-gray-800"
-            onClick={() => setCurrentView('clients')}>
+          <div
+            className="flex items-center gap-2 cursor-pointer text-gray-600 hover:text-gray-800 dark:text-gray-700 dark:hover:text-white"
+            onClick={() => setCurrentView('clients')}
+          >
             <Bookmark size={16} />
             <span className="text-sm">Saved Clients</span>
           </div>
         </div>
 
         {currentView === 'logs' ? (
-          <div className="overflow-hidden bg-white border border-gray-200 rounded-lg">
+          <div
+            className={`overflow-hidden border rounded-lg shadow-md ${
+              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+            }`}
+          >
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                <thead className={isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-50'}>
                   <tr>
-                    <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Log ID</th>
-                    <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">User ID</th>
-                    <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Timestamp</th>
-                    <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Action</th>
-                    <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Description</th>
-                    <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Username</th>
-                    <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Status</th>
+                    {['Log ID', 'User ID', 'Timestamp', 'Action', 'Description', 'Username', 'Status'].map(
+                      (heading) => (
+                        <th key={heading} className="px-6 py-3 text-xs font-medium text-left uppercase">
+                          {heading}
+                        </th>
+                      )
+                    )}
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {logs.map((log, index) => (
-                    <tr key={log.logId} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{log.logId}</td>
-                      <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">{log.userId}</td>
-                      <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">{log.timestamp}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">
-                          {log.action}
-                        </span>
-                      </td>
-                      <td className="max-w-xs px-6 py-4 text-sm text-gray-500 truncate">{log.description}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{log.username}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getLogStatusColor(log.status)}`}>
+                <tbody>
+                  {logs.map((log) => (
+                    <tr key={log.logId} className="transition-colors hover:bg-gray-100 dark:hover:bg-gray-700">
+                      <td className="px-6 py-4 text-sm">{log.logId}</td>
+                      <td className="px-6 py-4 text-sm">{log.userId}</td>
+                      <td className="px-6 py-4 text-sm">{log.timestamp}</td>
+                      <td className="px-6 py-4 text-sm text-blue-600 dark:text-blue-400">{log.action}</td>
+                      <td className="px-6 py-4 text-sm">{log.description}</td>
+                      <td className="px-6 py-4 text-sm">{log.username}</td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className={`px-2 py-1 rounded-full ${getLogStatusColor(log.status)}`}>
                           {log.status}
                         </span>
                       </td>
@@ -148,86 +338,63 @@ const ClientDashboard = () => {
             </div>
           </div>
         ) : (
-          <>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredClients.map((client) => (
-                <div key={client.id} className="p-6 transition-all duration-300 bg-white border border-gray-200 rounded-lg hover:shadow-lg hover:-translate-y-1">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg font-semibold text-gray-900">{client.name}</h3>
-                        <button 
-                          onClick={() => handleCopy(client)}
-                          className="text-gray-400 transition-colors hover:text-gray-600"
-                          title="Copy client details"
-                        >
-                          <Copy size={14} />
-                        </button>
-                      </div>
-                      <p className="text-sm text-gray-600">{client.company}</p>
-                    </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium text-white ${getStatusColor(client.status)}`}>
-                      {client.status}
-                    </span>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredClients.map((client) => (
+              <div
+                key={client.clientId}
+                className={`p-4 border rounded-lg shadow-sm transform transition-all duration-300 hover:scale-[1.02] hover:shadow-md cursor-pointer animate-fadeIn
+                  ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}
+                onClick={() => setSelectedClient(client)}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <h3 className="text-lg font-semibold">{client.clientName}</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">ID: {client.clientId}</p>
                   </div>
-
-                  <div className="grid grid-cols-2 mb-4 text-sm gap-x-4 gap-y-2">
-                    <div className="flex items-center gap-1 truncate">
-                      <span className="text-xs text-gray-500">ID:</span>
-                      <span className="font-mono text-xs text-gray-700 truncate">{client.clientId}</span>
-                    </div>
-                    <div className="flex items-center gap-1 truncate">
-                      <span className="text-xs text-gray-500">Phone:</span>
-                      <span className="text-xs text-gray-700 truncate">{client.phone}</span>
-                    </div>
-                    <div className="flex items-center gap-1 truncate">
-                      <span className="text-xs text-gray-500">DOB:</span>
-                      <span className="text-xs text-gray-700">{new Date(client.dob).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center gap-1 truncate">
-                      <span className="text-xs text-gray-500">Gender:</span>
-                      <span className="text-xs text-gray-700 capitalize">{client.gender}</span>
-                    </div>
-                    <div className="flex items-center col-span-2 gap-1">
-                      <span className="text-xs text-gray-500">Product:</span>
-                      <span className={`px-2 py-1 text-[0.7rem] font-medium rounded-full ${
-                        client.productType === 'Loan' ? 'bg-green-100 text-green-800' :
-                        client.productType === 'Investment' ? 'bg-blue-100 text-blue-800' :
-                        client.productType === 'Finance' ? 'bg-purple-100 text-purple-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {client.productType}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="mb-4">
-                    <span className="text-xs text-blue-600 cursor-pointer hover:underline">{client.email}</span>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button className="flex items-center justify-center flex-1 gap-2 px-3 py-2 text-sm font-medium text-gray-700 transition-colors bg-gray-100 rounded-lg hover:bg-gray-200">
-                      <Edit size={14} />
-                      Edit
-                    </button>
-                    <button className="flex items-center justify-center flex-1 gap-2 px-3 py-2 text-sm font-medium text-red-600 transition-colors rounded-lg bg-red-50 hover:bg-red-100">
-                      <Trash2 size={14} />
-                      Delete
-                    </button>
+                  <div className="flex gap-2">
+                    <Copy
+                      className="w-4 h-4 text-gray-500 hover:text-gray-700 dark:hover:text-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCopy(client);
+                      }}
+                    />
+                    <Edit
+                      className="w-4 h-4 text-blue-500 hover:text-blue-700"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(client);
+                      }}
+                    />
+                    <Trash2
+                      className="w-4 h-4 text-red-500 hover:text-red-700"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(client.clientId);
+                      }}
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
-
-            {filteredClients.length === 0 && (
-              <div className="py-12 text-center">
-                <p className="text-gray-500">No clients found matching your search.</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-gray-700 dark:text-gray-200">
+                  {detailItem('Email', client.clientEmail)}
+                  {detailItem('Contact', client.clientContact)}
+                  {detailItem('DOB', new Date(client.clientDob).toLocaleDateString())}
+                  {detailItem('Gender', client.clientGender)}
+                  {detailItem('Profession', client.clientProfession)}
+                  {detailItem('Family ID', client.familyId)}
+                  {detailItem('Family Head', client.familyHead === 1 ? 'Yes' : 'No')}
+                  {detailItem('Created At', new Date(client.createdAt).toLocaleString())}
+                </div>
               </div>
-            )}
-          </>
+            ))}
+          </div>
         )}
       </div>
     </div>
-  );
+  </div>
+);
+
+
 };
 
 export default ClientDashboard;

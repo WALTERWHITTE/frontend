@@ -1,58 +1,47 @@
-const logs = [
-  {
-    logId: 'LOG001',
-    userId: 'USR123',
-    timestamp: '2024-05-28 09:15:32',
-    action: 'LOGGED IN',
-    description: 'User successfully logged into the system',
-    username: 'John Smith',
-    status: 'Success',
-  },
-  {
-    logId: 'LOG002',
-    userId: 'USR456',
-    timestamp: '2024-05-28 09:22:18',
-    action: 'CREATE',
-    description: 'Created new client record for Jane Cooper',
-    username: 'Sarah Johnson',
-    status: 'Success',
-  },
-  {
-    logId: 'LOG004',
-    userId: 'USR789',
-    timestamp: '2024-05-28 10:12:45',
-    action: 'SEND',
-    description: 'Sent email notification to client',
-    username: 'Mike Wilson',
-    status: 'Success',
-  },
-  {
-    logId: 'LOG006',
-    userId: 'USR321',
-    timestamp: '2024-05-28 11:05:12',
-    action: 'NAVIGATED',
-    description: 'Navigated to client details page',
-    username: 'Emily Davis',
-    status: 'Success',
-  },
-  {
-    logId: 'LOG007',
-    userId: 'USR123',
-    timestamp: '2024-05-28 11:30:58',
-    action: 'UPDATE',
-    description: 'Failed to update client status - insufficient permissions',
-    username: 'John Smith',
-    status: 'Failed',
-  },
-  {
-    logId: 'LOG008',
-    userId: 'USR789',
-    timestamp: '2024-05-28 12:15:33',
-    action: 'LOGOUT',
-    description: 'User logged out of the system',
-    username: 'Mike Wilson',
-    status: 'Success',
-  },
-];
+// src/data/logs.js
 
-export default logs;
+const API_URL = 'http://localhost:3000/api/activity-log';
+
+export const fetchLogs = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Missing token');
+
+    const response = await fetch(API_URL, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to fetch logs');
+    }
+
+    const data = await response.json();
+    if (!Array.isArray(data)) throw new Error('Unexpected log format');
+
+    const formattedLogs = data.map(log => ({
+      logId: `${log.logId}`,  // 👈 Fixed: Avoids double prefix
+      userId: `${log.userId?.toString().padStart(3, '0') || '000'}`,
+      timestamp: new Date(log.timestamp).toLocaleString(),
+      action: log.action,
+      description: log.description,
+      username: log.username,
+      status: inferStatus(log.action, log.description),
+    }));
+
+    return formattedLogs;
+  } catch (error) {
+    console.error('Error fetching logs:', error);
+    return [];
+  }
+};
+
+const inferStatus = (action, description) => {
+  const failedKeywords = ['fail', 'insufficient', 'error', 'denied', 'unauthorized'];
+  const isFailure = failedKeywords.some(keyword =>
+    (description || '').toLowerCase().includes(keyword)
+  );
+  return isFailure ? 'Failed' : 'Success';
+};

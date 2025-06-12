@@ -1,114 +1,198 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const AddClientForm = ({ onClose, onAddClient }) => {
+const AddClientForm = ({ onClose, onAddClient, existingClient, darkMode }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    company: '',
-    email: '',
-    phone: '',
-    dob: '',
-    gender: '',
-    clientId: '',
-    productType: 'Loan'
+    clientName: '',
+    clientEmail: '',
+    clientContact: '',
+    clientDob: '',
+    clientProfession: '',
+    clientGender: '',
   });
 
-  const handleSubmit = (e) => {
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    if (existingClient) {
+      setFormData({
+        clientName: existingClient.clientName || '',
+        clientEmail: existingClient.clientEmail || '',
+        clientContact: existingClient.clientContact !== null ? String(existingClient.clientContact) : '',
+        clientDob: existingClient.clientDob ? existingClient.clientDob.split('T')[0] : '',
+        clientProfession: existingClient.clientProfession || '',
+        clientGender: existingClient.clientGender || '',
+      });
+    }
+  }, [existingClient]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onAddClient(formData);
-    onClose();
+    setError('');
+    setSuccess('');
+
+    const {
+      clientName,
+      clientEmail,
+      clientContact,
+      clientDob,
+      clientProfession,
+      clientGender,
+    } = formData;
+
+    // Validation
+    if (!clientName.trim()) return setError('Client Name is required');
+    if (!clientEmail.trim()) return setError('Client Email is required');
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(clientEmail)) return setError('Invalid email format');
+    if (clientGender && !['Male', 'Female'].includes(clientGender)) return setError('Gender must be Male or Female');
+    if (clientDob && isNaN(new Date(clientDob).getTime())) return setError('Invalid date of birth');
+    if (clientContact && !/^\d{10}$/.test(clientContact)) return setError('Contact must be a 10-digit number');
+
+    const token = localStorage.getItem('token');
+    if (!token) return setError('Unauthorized: Please login.');
+
+    const clientPayload = {
+      name: clientName.trim(),
+      email: clientEmail.trim(),
+      contact: clientContact ? String(clientContact).trim() : null,
+      dob: clientDob || null,
+      profession: clientProfession ? String(clientProfession).trim() : null,
+      gender: clientGender || null,
+    };
+
+    const url = existingClient
+      ? `http://localhost:3000/api/clients/${existingClient.clientId}`
+      : 'http://localhost:3000/api/clients';
+    const method = existingClient ? 'PUT' : 'POST';
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(clientPayload),
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Request failed');
+
+      setSuccess(existingClient ? '✅ Client updated successfully!' : '✅ Client added successfully!');
+
+      if (onAddClient) {
+        const updatedClient = {
+          clientId: existingClient?.clientId || result.clientId,
+          clientName: clientPayload.name,
+          clientEmail: clientPayload.email,
+          clientContact: clientPayload.contact,
+          clientDob: clientPayload.dob,
+          clientProfession: clientPayload.profession,
+          clientGender: clientPayload.gender,
+        };
+
+        console.log('[onAddClient] Sending to dashboard:', updatedClient);
+        onAddClient(updatedClient);
+      }
+
+      onClose(); // Close modal
+    } catch (err) {
+      console.error('❌ Error:', err);
+      setError(err.message || 'Something went wrong.');
+    }
   };
 
   return (
-    <div className="max-w-md p-6 mx-auto bg-white rounded-lg shadow-lg">
-      <h2 className="mb-4 text-xl font-semibold">Add New Client</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="text"
-          name="name"
-          placeholder="Client Name"
-          value={formData.name}
-          onChange={(e) => setFormData({...formData, name: e.target.value})}
-          className="w-full px-4 py-2 border rounded-md"
-          required
-        />
-        <input
-          type="text"
-          name="company"
-          placeholder="Company"
-          value={formData.company}
-          onChange={(e) => setFormData({...formData, company: e.target.value})}
-          className="w-full px-4 py-2 border rounded-md"
-          required
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={(e) => setFormData({...formData, email: e.target.value})}
-          className="w-full px-4 py-2 border rounded-md"
-          required
-        />
-        <input
-          type="tel"
-          name="phone"
-          placeholder="Phone"
-          value={formData.phone}
-          onChange={(e) => setFormData({...formData, phone: e.target.value})}
-          className="w-full px-4 py-2 border rounded-md"
-        />
-        <input
-          type="date"
-          name="dob"
-          placeholder="Date of Birth"
-          value={formData.dob}
-          onChange={(e) => setFormData({...formData, dob: e.target.value})}
-          className="w-full px-4 py-2 border rounded-md"
-        />
-        <input
-          type="text"
-          name="clientId"
-          placeholder="Client ID"
-          value={formData.clientId}
-          onChange={(e) => setFormData({...formData, clientId: e.target.value})}
-          className="w-full px-4 py-2 border rounded-md"
-          required
-        />
-        <select
-          name="gender"
-          value={formData.gender}
-          onChange={(e) => setFormData({...formData, gender: e.target.value})}
-          className="w-full px-4 py-2 border rounded-md"
-          required
+  <div className={`max-w-md p-6 mx-auto rounded-lg shadow-lg transition duration-300 ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}>
+    <h2 className="mb-4 text-xl font-semibold">
+      {existingClient ? 'Edit Client' : 'Add New Client'}
+    </h2>
+
+    {error && <p className="mb-2 text-red-500">{error}</p>}
+    {success && <p className="mb-2 text-green-500">{success}</p>}
+
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <input
+        type="text"
+        name="clientName"
+        placeholder="Client Name *"
+        value={formData.clientName}
+        onChange={handleChange}
+        className={`w-full px-4 py-2 border rounded-md ${darkMode ? 'bg-gray-800 text-white border-gray-600' : 'bg-white text-black'}`}
+        required
+      />
+      <input
+        type="email"
+        name="clientEmail"
+        placeholder="Client Email *"
+        value={formData.clientEmail}
+        onChange={handleChange}
+        className={`w-full px-4 py-2 border rounded-md ${darkMode ? 'bg-gray-800 text-white border-gray-600' : 'bg-white text-black'}`}
+        required
+      />
+      <input
+        type="tel"
+        name="clientContact"
+        placeholder="Contact Number"
+        value={formData.clientContact}
+        onChange={handleChange}
+        className={`w-full px-4 py-2 border rounded-md ${darkMode ? 'bg-gray-800 text-white border-gray-600' : 'bg-white text-black'}`}
+      />
+      <input
+        type="date"
+        name="clientDob"
+        value={formData.clientDob}
+        onChange={handleChange}
+        className={`w-full px-4 py-2 border rounded-md ${darkMode ? 'bg-gray-800 text-white border-gray-600' : 'bg-white text-black'}`}
+      />
+      <input
+        type="text"
+        name="clientProfession"
+        placeholder="Profession"
+        value={formData.clientProfession}
+        onChange={handleChange}
+        className={`w-full px-4 py-2 border rounded-md ${darkMode ? 'bg-gray-800 text-white border-gray-600' : 'bg-white text-black'}`}
+      />
+      <select
+        name="clientGender"
+        value={formData.clientGender}
+        onChange={handleChange}
+        className={`w-full px-4 py-2 border rounded-md ${darkMode ? 'bg-gray-800 text-white border-gray-600' : 'bg-white text-black'}`}
+      >
+        <option value="">Select Gender</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+      </select>
+
+      <div className="flex justify-end gap-4">
+        <button
+          type="button"
+          onClick={onClose}
+          className={`px-4 py-2 rounded ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-black'}`}
         >
-          <option value="">Select Gender</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Other">Other</option>
-        </select>
-        <select
-          name="productType"
-          value={formData.productType}
-          onChange={(e) => setFormData({...formData, productType: e.target.value})}
-          className="w-full px-4 py-2 border rounded-md"
-          required
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className={`px-4 py-2 rounded ${darkMode ? 'bg-blue-700 text-white' : 'bg-blue-600 text-white'}`}
         >
-          <option value="Loan">Loan</option>
-          <option value="Investment">Investment</option>
-          <option value="Finance">Finance</option>
-          <option value="Insurance">Insurance</option>
-        </select>
-        <div className="flex justify-end gap-4">
-          <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 rounded">
-            Cancel
-          </button>
-          <button type="submit" className="px-4 py-2 text-white bg-blue-600 rounded">
-            Submit
-          </button>
-        </div>
-      </form>
-    </div>
-  );
+          {existingClient ? 'Update' : 'Add'}
+        </button>
+      </div>
+    </form>
+  </div>
+);
+
 };
 
 export default AddClientForm;
