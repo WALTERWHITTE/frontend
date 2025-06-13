@@ -16,3 +16,31 @@
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
 }
+
+.custom-quill .ql-container {
+  @apply border rounded bg-transparent text-white !important;
+  min-height: 16rem;
+  border-color: theme('colors.gray.600');
+}
+
+.custom-quill .ql-editor {
+  @apply text-sm leading-relaxed p-2 !important;
+  color: white;
+}
+
+.custom-preview h1 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.75rem;
+}
+.custom-preview h2 {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.custom-preview h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+/* Add more as needed */
