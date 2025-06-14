@@ -1,16 +1,10 @@
 // tailwind.config.js
-module.exports = {
-  darkMode: 'class', // ← This enables dark mode via a `dark` class
-  content: [
-    './src/**/*.{js,jsx,ts,tsx}', // Adjust if your file structure is different
-  ],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-};
 
 module.exports = {
+  darkMode: 'class',  // enable dark mode via 'class'
+  content: [
+    './src/**/*.{js,jsx,ts,tsx}', 
+  ],
   theme: {
     extend: {
       keyframes: {

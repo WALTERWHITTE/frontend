@@ -65,11 +65,18 @@ const LogDashboard = () => {
         {/* Dark mode toggle */}
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
           <button
-            onClick={toggleDarkMode}
-            className="px-3 py-1 text-sm font-medium border rounded shadow-sm transition-all duration-300 hover:scale-105 active:scale-95 bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
-          >
-            {isDarkMode ? '🌙 Dark' : '☀️ Light'}
-          </button>
+  onClick={toggleDarkMode}
+  className={`
+    w-20 h-10 flex items-center justify-center rounded-full border shadow-sm transition-all duration-300 
+    hover:scale-105 active:scale-95 
+    hover:bg-gray-100 dark:hover:bg-gray-700
+    ${isDarkMode 
+    ? 'bg-gray-800 text-gray-100 border-gray-600 hover:text-gray-300' 
+    : 'bg-white text-gray-700 border-gray-300 hover:text-gray-300'}
+  `}
+>
+  {isDarkMode ? '🌙 Dark' : '☀️ Light'}
+</button>
         </div>
 
         {/* Header */}
@@ -104,12 +111,18 @@ const LogDashboard = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input
-                type="text"
-                placeholder="Search logs..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-64 py-2 pl-10 pr-4 border rounded-lg outline-none transition focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-              />
+  type="text"
+  placeholder="Search templates..."
+  value={searchTerm}
+  onChange={(e) => setSearchTerm(e.target.value)}
+  className={`
+    w-64 py-2 pl-10 pr-4 border rounded-lg outline-none transition focus:ring-2 focus:ring-blue-500
+    ${isDarkMode 
+      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-300' 
+      : 'bg-white border-gray-300 text-black placeholder-gray-500'
+    }
+  `}
+/>
             </div>
           </div>
 

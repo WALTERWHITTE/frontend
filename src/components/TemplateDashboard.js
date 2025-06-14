@@ -90,11 +90,18 @@ const TemplateDashboard = () => {
         {/* Dark Mode Toggle */}
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
           <button
-            onClick={toggleDarkMode}
-            className="px-3 py-1 text-sm font-medium border rounded shadow-sm transition-all duration-300 hover:scale-105 active:scale-95 bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
-          >
-            {isDarkMode ? '🌙 Dark' : '☀️ Light'}
-          </button>
+  onClick={toggleDarkMode}
+  className={`
+    w-20 h-10 flex items-center justify-center rounded-full border shadow-sm transition-all duration-300 
+    hover:scale-105 active:scale-95 
+    hover:bg-gray-100 dark:hover:bg-gray-700
+    ${isDarkMode 
+    ? 'bg-gray-800 text-gray-100 border-gray-600 hover:text-gray-300' 
+    : 'bg-white text-gray-700 border-gray-300 hover:text-gray-300'}
+  `}
+>
+  {isDarkMode ? '🌙 Dark' : '☀️ Light'}
+</button>
         </div>
 
         {/* Add Template Modal */}
@@ -140,13 +147,22 @@ const TemplateDashboard = () => {
 
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-              <input
-                type="text"
-                placeholder="Search templates..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-64 py-2 pl-10 pr-4 border rounded-lg outline-none transition focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-              />
+             <input
+  type="text"
+  placeholder="Search templates..."
+  value={searchTerm}
+  onChange={(e) => setSearchTerm(e.target.value)}
+  className={`
+    w-64 py-2 pl-10 pr-4 border rounded-lg outline-none transition focus:ring-2 focus:ring-blue-500
+    ${isDarkMode 
+      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-300' 
+      : 'bg-white border-gray-300 text-black placeholder-gray-500'
+    }
+  `}
+/>
+
+
+
             </div>
           </div>
 
@@ -162,12 +178,12 @@ const TemplateDashboard = () => {
             {filteredTemplates.map((template) => (
               <div
                 key={template.templateId}
-                className={`p-4 border rounded-lg shadow-sm transform transition-all duration-300 hover:scale-[1.02] hover:shadow-md cursor-pointer animate-fadeIn ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}
+                className={`p-4 border rounded-lg shadow-sm transform transition-all duration-300 hover:scale-[1.02] hover:shadow-md cursor-pointer animate-fadeIn ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <h3 className="text-lg font-semibold">{template.templateName}</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">ID: {template.templateId}</p>
+                    <p className="text-xs text-gray-300 dark:text-gray-500">ID: {template.templateId}</p>
                   </div>
 
                   <div className="flex gap-2">
@@ -177,7 +193,7 @@ const TemplateDashboard = () => {
                   </div>
                 </div>
 
-                <p className="text-sm text-gray-600 dark:text-gray-700 mb-1">Subject: {template.subject}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-500 mb-1">Subject: {template.subject}</p>
                 <div
                   className="text-xs text-gray-500 dark:text-gray-400 prose max-w-none dark:prose-invert"
                   dangerouslySetInnerHTML={{
