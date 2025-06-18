@@ -6,6 +6,7 @@ import LogDashboard from './components/LogDashboard';
 import FamilyDashboard from './components/FamilyDashboard';
 import Login from './components/Login';
 import { DarkModeProvider } from './context/DarkModeContext'; 
+import SendMailDashboard from './components/SendMailDashboard';
 
 const App = () => {
   return (
@@ -16,6 +17,7 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/clients" element={<ClientDashboard />} />
           <Route path="/family" element={<FamilyDashboard />} />
+          <Route path="/sendmail" element={<SendMailDashboard/>} />
           <Route path="/templates" element={<TemplateDashboard />} />
           <Route path="/logs" element={<LogDashboard />} />
         </Routes>

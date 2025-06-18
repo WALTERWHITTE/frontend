@@ -1,0 +1,104 @@
+// components/FilterPreviewModal.js
+import React, { useEffect, useState, useCallback } from 'react';
+import { Dialog } from '@headlessui/react';
+
+const API_BASE_URL = 'http://localhost:3000';
+
+export const FilterPreviewModal = ({ isOpen, onClose, filterPayload }) => {
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Define outside useEffect so both can use it
+  const fetchFilteredClients = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE_URL}/api/clientFilter`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(filterPayload),
+      });
+
+      const raw = await res.text();
+      console.log('[FilterPreview] Raw Response:', raw);
+
+      if (!res.ok) throw new Error(raw);
+
+      const parsed = JSON.parse(raw);
+      setClients(parsed.clients || []);
+    } catch (err) {
+      console.error('Error fetching filtered clients:', err);
+      setClients([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [filterPayload]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setLoading(true);
+      fetchFilteredClients();
+    }
+  }, [isOpen, fetchFilteredClients]);
+
+  const formatDate = (dob) => {
+    const d = new Date(dob);
+    return d.toLocaleDateString();
+  };
+
+  return (
+    <Dialog open={!!isOpen} onClose={onClose}
+ className="fixed inset-0 z-50 flex items-center justify-center">
+      <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-40" />
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl max-w-5xl w-full z-10 shadow-xl max-h-[80vh] overflow-y-auto">
+        <Dialog.Title className="text-xl font-bold mb-4">Filtered Clients</Dialog.Title>
+
+        {loading ? (
+          <p className="text-center text-gray-500">Loading clients...</p>
+        ) : clients.length === 0 ? (
+          <p className="text-center text-gray-500">No matching clients found.</p>
+        ) : (
+          <table className="w-full text-sm text-left border dark:border-gray-700">
+            <thead className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white">
+              <tr>
+                <th className="p-2 border dark:border-gray-700">Name</th>
+                <th className="p-2 border dark:border-gray-700">Email</th>
+                <th className="p-2 border dark:border-gray-700">Gender</th>
+                <th className="p-2 border dark:border-gray-700">DOB</th>
+                <th className="p-2 border dark:border-gray-700">Products</th>
+                <th className="p-2 border dark:border-gray-700">Family Head</th>
+              </tr>
+            </thead>
+            <tbody>
+              {clients.map((client) => (
+                <tr key={client.clientId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="p-2 border dark:border-gray-700">{client.clientName}</td>
+                  <td className="p-2 border dark:border-gray-700">{client.clientEmail}</td>
+                  <td className="p-2 border dark:border-gray-700">{client.clientGender}</td>
+                  <td className="p-2 border dark:border-gray-700">{formatDate(client.clientDOB)}</td>
+                  <td className="p-2 border dark:border-gray-700">{client.clientProducts || '—'}</td>
+                  <td className="p-2 border dark:border-gray-700 text-center">
+                    {client.familyHead ? '✔️' : '❌'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        <div className="mt-6 text-right">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 dark:text-white"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </Dialog>
+  );
+};
+
+export default FilterPreviewModal;

@@ -97,7 +97,7 @@ const ActionsMenu = ({ isOpen, onToggle, isDarkMode }) => {
                       } transition-colors duration-300`}
                       onClick={() => {
                         onToggle();
-                        navigate('/clients?view=sendMail');
+                        navigate('/sendmail');
                       }}
                     >
                       <Send size={16} className="text-indigo-600" />
