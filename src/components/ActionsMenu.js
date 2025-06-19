@@ -160,7 +160,7 @@ const ActionsMenu = ({ isOpen, onToggle, isDarkMode }) => {
                       } transition-colors duration-300`}
                       onClick={() => {
                         onToggle();
-                        navigate('/client-products');
+                        navigate('/clientproducts');
                       }}
                     >
                       <ShoppingBag size={16} className="text-purple-600" />
