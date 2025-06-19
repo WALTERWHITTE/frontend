@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Search, Bookmark } from 'lucide-react';
 import ActionsMenu from './ActionsMenu';
-import { fetchLogs } from '../data/log';
+import { fetchLogs, clearLogs as clearLogsAPI } from '../data/log';
+
 import { getLogStatusColor } from '../utils/utils';
 import { useDarkMode } from '../context/DarkModeContext';
 import { downloadCSV } from './csvDownloader';
@@ -43,6 +44,20 @@ const LogDashboard = () => {
       console.error('Error fetching logs:', error);
     }
   };
+
+  const clearLogs = async () => {
+  const confirmClear = window.confirm('Are you sure you want to delete all logs? This cannot be undone.');
+  if (!confirmClear) return;
+
+  const success = await clearLogsAPI();
+  if (success) {
+    await loadLogs();
+    alert('All logs cleared successfully!');
+  } else {
+    alert('Failed to clear logs. Check console for more details.');
+  }
+};
+
 
   const filteredLogs = logs.filter((log) => {
     const term = searchTerm.toLowerCase();
@@ -104,6 +119,12 @@ const LogDashboard = () => {
     className="flex items-center gap-2 px-3 py-2 text-white bg-blue-900 rounded-lg hover:bg-blue-700 transition"
   >
     Download Logs
+  </button>
+  <button
+    onClick={clearLogs}
+    className="flex items-center gap-2 px-3 py-2 text-white bg-red-700 rounded-lg hover:bg-red-600 transition"
+  >
+    Clear Logs
   </button>
 </div>
 

@@ -5,6 +5,7 @@ import TemplateDashboard from './components/TemplateDashboard';
 import LogDashboard from './components/LogDashboard';
 import FamilyDashboard from './components/FamilyDashboard';
 import Login from './components/Login';
+import ProductsPage from './components/ProductPage';
 import { DarkModeProvider } from './context/DarkModeContext'; 
 import SendMailDashboard from './components/SendMailDashboard';
 import './utils/jwtInterceptor';
@@ -19,6 +20,7 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/clients" element={<ClientDashboard />} />
           <Route path="/family" element={<FamilyDashboard />} />
+          <Route path="/products" element={<ProductsPage />} />
           <Route path="/clientproducts" element={<ClientProductsPage />} />
           <Route path="/sendmail" element={<SendMailDashboard/>} />
           <Route path="/templates" element={<TemplateDashboard />} />

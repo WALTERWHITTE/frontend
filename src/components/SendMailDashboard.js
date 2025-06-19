@@ -85,6 +85,14 @@ const SendMailDashboard = () => {
   document.body.removeChild(link);
 };
 
+// Get latest status per unique email:
+const latestStatuses = sendStatus.reduce((acc, curr) => {
+  acc[curr.email] = curr.status;
+  return acc;
+}, {});
+
+const allDone = Object.values(latestStatuses).every(status => status !== 'sending');
+
 
   const getFilterPayload = () => {
     const payload = { templateId: selectedTemplate?.templateId };
@@ -274,6 +282,12 @@ const SendMailDashboard = () => {
   <p>❌ Failed: {sendStatus.filter(c => c.status === 'failed').length}</p>
 </div>
 
+ {/* Mail sending complete message */}
+    {allDone && (
+  <div className="mt-4 text-blue-400 font-semibold">
+    📨 Mail sending has ended.
+  </div>
+)}
                 </div>
               )}
               {sendStatus.length > 0 && (

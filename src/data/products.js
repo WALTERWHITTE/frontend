@@ -78,7 +78,7 @@ export const updateProduct = async (productId, updatedData) => {
 };
 
 // DELETE: Delete a product
-export const deleteProductById = async (productId) => {
+export const deleteProductById = async (productId, unlinkBeforeDelete = false) => {
   const token = localStorage.getItem('token');
   if (!token) throw new Error('Unauthorized: Please log in.');
 
@@ -86,12 +86,31 @@ export const deleteProductById = async (productId) => {
     method: 'DELETE',
     headers: {
       Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
     },
+    body: JSON.stringify({ productId, unlinkBeforeDelete }),
   });
 
   const result = await response.json();
   console.log('[deleteProductById] Response:', result);
 
-  if (!response.ok) throw new Error(result.message || 'Failed to delete product');
+  // If deletion failed due to client associations
+  if (!response.ok) {
+    if (result.message?.includes('unlink before deletion') && !unlinkBeforeDelete) {
+      const confirmUnlink = window.confirm(
+        'This product is associated with clients. Unlink it from client-Products and delete'
+      );
+
+      if (confirmUnlink) {
+        // Retry with unlinkBeforeDelete = true
+        return await deleteProductById(productId, true);
+      } else {
+        throw new Error('Deletion cancelled by user.');
+      }
+    }
+
+    throw new Error(result.message || 'Failed to delete product');
+  }
+
   return result;
 };

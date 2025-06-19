@@ -22,7 +22,7 @@ export const fetchLogs = async () => {
     if (!Array.isArray(data)) throw new Error('Unexpected log format');
 
     const formattedLogs = data.map(log => ({
-      logId: `${log.logId}`,  // 👈 Fixed: Avoids double prefix
+      logId: `${log.logId}`,
       userId: `${log.userId?.toString().padStart(3, '0') || '000'}`,
       timestamp: new Date(log.timestamp).toLocaleString(),
       action: log.action,
@@ -35,6 +35,31 @@ export const fetchLogs = async () => {
   } catch (error) {
     console.error('Error fetching logs:', error);
     return [];
+  }
+};
+
+export const clearLogs = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Missing token');
+
+    const response = await fetch(API_URL, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to clear logs');
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error clearing logs:', error);
+    return false;
   }
 };
 
