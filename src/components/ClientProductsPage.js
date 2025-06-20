@@ -15,7 +15,7 @@ const ClientProductsPage = () => {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
 
   const [isActionsOpen, setIsActionsOpen] = useState(false);
-  const [clientProductMap, setClientProductMap] = useState({});
+  const [clientProductList, setClientProductList] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [clients, setClients] = useState([]);
@@ -40,7 +40,7 @@ const ClientProductsPage = () => {
         if (!map[clientId]) map[clientId] = { clientName, products: [] };
         map[clientId].products.push({ productName, productId });
       });
-      setClientProductMap(map);
+      setClientProductList(map);
     } catch (err) {
       console.error('Error loading client-products:', err);
     }
@@ -105,9 +105,17 @@ const ClientProductsPage = () => {
     setShowForm(true);
   };
 
-  const filteredEntries = Object.entries(clientProductMap).filter(([, value]) =>
-  value?.clientName?.toLowerCase().includes(searchQuery.toLowerCase())
-);
+const filteredEntries = Object.entries(clientProductList).filter(([, value]) => {
+  const query = searchQuery.toLowerCase();
+  const nameMatch = value.clientName?.toLowerCase().includes(query);
+
+  const productMatch = value.products?.some(p =>
+    p.productName?.toLowerCase().includes(query)
+  );
+
+  return nameMatch || productMatch;
+});
+
 
 
   return (
@@ -166,7 +174,7 @@ const ClientProductsPage = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input
               type="text"
-              placeholder="Search by client name..."
+              placeholder="Search name or product..."
               className={`w-64 py-2 pl-10 pr-4 border rounded-lg outline-none transition focus:ring-2 focus:ring-blue-500 
               ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-300' : 'bg-white border-gray-300 text-black placeholder-gray-500'}`}
               value={searchQuery}

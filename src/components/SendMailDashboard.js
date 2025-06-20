@@ -14,7 +14,7 @@ const SendMailDashboard = () => {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [filters, setFilters] = useState('All clients');
   const [secondOption, setSecondOption] = useState('');
-  const [productId, setProductId] = useState('');
+  const [productIds, setProductIds] = useState([]);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [sendStatus, setSendStatus] = useState([]);
   const [ageComparator, setAgeComparator] = useState('>');
@@ -100,9 +100,10 @@ const allDone = Object.values(latestStatuses).every(status => status !== 'sendin
       payload.filterName = filters;
       return payload;
     }
-    if (secondOption === 'product' && productId) {
-      payload.filterName = `${filters} with product`;
-      payload.productId = Number(productId);
+   if (secondOption === 'product' && productIds.length > 0) {
+  payload.filterName = `${filters} with product`;
+  payload.productIds = productIds.map(Number);
+
     } else if (secondOption === 'age' && ageValue) {
       payload.filterName = `${filters} by age`;
       payload.ageComparator = ageComparator;
@@ -114,7 +115,8 @@ const allDone = Object.values(latestStatuses).every(status => status !== 'sendin
   };
 
   const isFilterValid = () => {
-    if (secondOption === 'product' && !productId) return false;
+    if (secondOption === 'product' && productIds.length === 0) return false;
+
     if (secondOption === 'age' && !ageValue) return false;
     return true;
   };
@@ -208,7 +210,7 @@ const allDone = Object.values(latestStatuses).every(status => status !== 'sendin
               <select value={filters} onChange={(e) => {
                 setFilters(e.target.value);
                 if (e.target.value === 'Clients who celebrate birthday') {
-                  setSecondOption(''); setAgeValue(''); setProductId(''); setAgeComparator('>');
+                  setSecondOption(''); setAgeValue(''); setProductIds(''); setAgeComparator('>');
                 }
               }} className={`w-full border p-2 rounded ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`}>
                 <option>All clients</option>
@@ -231,11 +233,26 @@ const allDone = Object.values(latestStatuses).every(status => status !== 'sendin
               )}
 
               {secondOption === 'product' && (
-                <select value={productId} onChange={(e) => setProductId(e.target.value)} className={`w-full border p-2 rounded ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`}>
-                  <option value="">Select Product</option>
-                  {productList.map(p => <option key={p.productId} value={p.productId}>{p.productName}</option>)}
-                </select>
-              )}
+  <div className="grid grid-cols-2 gap-2">
+    {productList.map((p) => (
+      <label key={p.productId} className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={productIds.includes(p.productId)}
+          onChange={(e) => {
+            if (e.target.checked) {
+              setProductIds((prev) => [...prev, p.productId]);
+            } else {
+              setProductIds((prev) => prev.filter((id) => id !== p.productId));
+            }
+          }}
+        />
+        {p.productName}
+      </label>
+    ))}
+  </div>
+)}
+
 
               {secondOption === 'age' && (
                 <div className="flex gap-2">
@@ -255,10 +272,22 @@ const allDone = Object.values(latestStatuses).every(status => status !== 'sendin
                   <Eye className="w-4 h-4" />
                   Preview Clients
                 </button>
-                <button onClick={handleSendEmails} disabled={!isFilterValid()} className={`px-4 py-2 rounded shadow flex items-center gap-2 ${isFilterValid() ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-400 text-gray-100 cursor-not-allowed'}`}>
-                  <Send className="w-4 h-4" />
-                  Send Emails
-                </button>
+                <button
+  onClick={() => {
+    if (window.confirm('Are you sure you want to send mail to filtered clients?')) {
+      handleSendEmails();
+    }
+  }}
+  disabled={!isFilterValid()}
+  className={`px-4 py-2 rounded shadow flex items-center gap-2 ${
+    isFilterValid()
+      ? 'bg-blue-600 text-white hover:bg-blue-700'
+      : 'bg-gray-400 text-gray-100 cursor-not-allowed'
+  }`}
+>
+  <Send className="w-4 h-4" />
+  Send Emails
+</button>
               </div>
 
               {sendStatus.length > 0 && (
