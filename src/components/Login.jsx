@@ -12,48 +12,53 @@ const Login = () => {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
+  e.preventDefault();
+  setError('');
+  setSuccess('');
 
-    if (!username || !password) {
-      setError('Please enter both username and password');
+  if (!username || !password) {
+    setError('Please enter both username and password');
+    return;
+  }
+
+  try {
+    const endpoint = isRegisterMode ? '/register' : '/login';
+    const response = await fetch(`http://localhost:3000${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonErr) {
+      throw new Error('Invalid response format');
+    }
+
+    if (!response.ok) {
+      setError(data.error || 'Something went wrong');
       return;
     }
 
-    try {
-      const endpoint = isRegisterMode ? '/register' : '/login';
-      const response = await fetch(`http://localhost:3000${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || 'Something went wrong');
-        return;
-      }
-
-      if (isRegisterMode) {
-        setSuccess('Registration successful. You can now log in.');
-        setIsRegisterMode(false);
-        return;
-      }
-
-      // Store JWT + basic user info on login
-      const { token, userId, username: loggedInUsername } = data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('userId', userId);
-      localStorage.setItem('username', loggedInUsername);
-
-      navigate('/logs');
-    } catch (err) {
-      console.error('Auth error:', err);
-      setError('Something went wrong. Please try again.');
+    if (isRegisterMode) {
+      setSuccess('Registration successful. You can now log in.');
+      setIsRegisterMode(false);
+      return;
     }
-  };
+
+    const { token, userId, username: loggedInUsername } = data;
+    localStorage.setItem('token', token);
+    localStorage.setItem('userId', userId);
+    localStorage.setItem('username', loggedInUsername);
+
+    navigate('/logs');
+  } catch (err) {
+    console.error('Auth error:', err);
+    setError(err.message || 'Something went wrong. Please try again.');
+  }
+};
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
