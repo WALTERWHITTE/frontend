@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import DOMPurify from 'dompurify';
+import EmojiPicker from 'emoji-picker-react';
+import { Smile } from 'lucide-react';
 
 
 const defaultTemplate = {
@@ -26,6 +28,7 @@ const AddTemplateForm = ({ onSubmit, onCancel, editingTemplate, darkMode = false
   const [selectedPlaceholder, setSelectedPlaceholder] = useState('');
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [placeholdersToRemove, setPlaceholdersToRemove] = useState([]);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const quillRef = useRef(null);
 
@@ -133,6 +136,16 @@ const AddTemplateForm = ({ onSubmit, onCancel, editingTemplate, darkMode = false
     }
   };
 
+  const onEmojiClick = (emojiObject) => {
+    const editor = quillRef.current?.getEditor();
+    if (editor) {
+      const range = editor.getSelection(true);
+      editor.insertText(range.index, emojiObject.emoji);
+      editor.setSelection(range.index + emojiObject.emoji.length);
+      setShowEmojiPicker(false);
+    }
+  };
+
   // HTML sanitization, link fixing, and placeholder styling
   const generatePreviewHTML = (content) => {
   const parser = new DOMParser();
@@ -140,7 +153,7 @@ const AddTemplateForm = ({ onSubmit, onCancel, editingTemplate, darkMode = false
 
   doc.body.innerHTML = doc.body.innerHTML.replace(
     /\$\{(\w+)\}/g,
-    '<span class="bg-green-500 text-white px-1 rounded">$1</span>'
+    '<span class="px-1 text-white bg-green-500 rounded">$1</span>'
   );
 
   const anchors = doc.querySelectorAll('a');
@@ -169,7 +182,7 @@ const AddTemplateForm = ({ onSubmit, onCancel, editingTemplate, darkMode = false
   <div
     className={`p-4 rounded-lg shadow-md border transition-all duration-300 ${
       isFullscreen ? 'fixed inset-0 z-50' : ''
-    } ${darkMode ? 'bg-gray-900 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+    } ${darkMode ? 'text-white bg-gray-900 border-gray-700' : 'text-gray-800 bg-white border-gray-300'}`}
   >
     <div className="flex justify-between items-center mb-4">
       <h2 className="text-lg font-bold">{editingTemplate ? 'Edit Template' : 'Add New Template'}</h2>
@@ -177,7 +190,7 @@ const AddTemplateForm = ({ onSubmit, onCancel, editingTemplate, darkMode = false
         <button
           onClick={() => setIsFullscreen(f => !f)}
           className={`px-3 py-1 text-sm rounded ${
-            darkMode ? 'bg-blue-800 hover:bg-blue-700 text-white' : 'bg-blue-200 hover:bg-blue-300'
+            darkMode ? 'text-white bg-blue-800 hover:bg-blue-700' : 'bg-blue-200 hover:bg-blue-300'
           }`}
         >
           {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
@@ -185,7 +198,7 @@ const AddTemplateForm = ({ onSubmit, onCancel, editingTemplate, darkMode = false
         <button
           onClick={() => setIsPreview(p => !p)}
           className={`px-3 py-1 text-sm rounded ${
-            darkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300'
+            darkMode ? 'text-white bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'
           }`}
         >
           {isPreview ? 'Hide Preview' : 'Preview'}
@@ -193,14 +206,14 @@ const AddTemplateForm = ({ onSubmit, onCancel, editingTemplate, darkMode = false
       </div>
     </div>
 
-    <div className={`${isPreview ? 'grid grid-cols-2 gap-4 max-w-screen-xl mx-auto' : 'block max-w-screen-md mx-auto'}`}>
+    <div className={`${isPreview ? 'grid grid-cols-2 gap-4 mx-auto max-w-screen-xl' : 'block mx-auto max-w-screen-md'}`}>
       <div>
         <input
           type="text"
           placeholder="Template Name"
           value={template.templateName}
           onChange={(e) => handleChange('templateName', e.target.value)}
-          className={`w-full p-2 mb-2 border rounded ${darkMode ? 'bg-gray-800 text-white border-gray-600' : 'text-gray-800'}`}
+          className={`w-full p-2 mb-2 border rounded ${darkMode ? 'text-white bg-gray-800 border-gray-600' : 'text-gray-800'}`}
         />
         <input
           type="text"
@@ -208,11 +221,11 @@ const AddTemplateForm = ({ onSubmit, onCancel, editingTemplate, darkMode = false
           value={template.subject}
           onChange={(e) => handleChange('subject', e.target.value)}
           className={`w-full p-2 mb-2 border rounded font-semibold text-xl ${
-            darkMode ? 'bg-gray-800 text-white border-gray-600' : 'text-gray-900'
+            darkMode ? 'text-white bg-gray-800 border-gray-600' : 'text-gray-900'
           }`}
         />
 
-        <div className="flex flex-wrap items-center gap-2 mb-4">
+        <div className="flex flex-wrap gap-2 items-center mb-4">
           <label className="text-sm">Insert Placeholder:</label>
           <select
             value={selectedPlaceholder}
@@ -224,7 +237,7 @@ const AddTemplateForm = ({ onSubmit, onCancel, editingTemplate, darkMode = false
                 setSelectedPlaceholder('');
               }
             }}
-            className={`p-1 border rounded ${darkMode ? 'bg-gray-800 text-white border-gray-600' : 'text-gray-800'}`}
+            className={`p-1 border rounded ${darkMode ? 'text-white bg-gray-800 border-gray-600' : 'text-gray-800'}`}
           >
             <option value="">Select</option>
             {placeholderOptions.map((ph) => (
@@ -251,7 +264,6 @@ const AddTemplateForm = ({ onSubmit, onCancel, editingTemplate, darkMode = false
           <input
             type="text"
             placeholder="Custom Placeholder"
-            className={`p-1 border rounded ${darkMode ? 'bg-gray-800 text-white border-gray-600' : 'text-gray-800'}`}
             value={customPlaceholder}
             onChange={(e) => setCustomPlaceholder(e.target.value)}
             onKeyDown={(e) => {
@@ -260,51 +272,65 @@ const AddTemplateForm = ({ onSubmit, onCancel, editingTemplate, darkMode = false
                 handleAddCustomPlaceholder();
               }
             }}
+            className={`p-1 border rounded ${darkMode ? 'text-white bg-gray-800 border-gray-600' : 'text-gray-800'}`}
           />
 
           <div className="flex gap-2 ml-auto">
             <button
               onClick={handleSubmit}
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              className="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700"
             >
               {editingTemplate ? 'Update Template' : 'Create Template'}
             </button>
             <button
               onClick={onCancel}
-              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              className="px-4 py-2 text-white bg-red-500 rounded hover:bg-red-600"
             >
               Cancel
             </button>
           </div>
         </div>
 
-        <ReactQuill
-          ref={quillRef}
-          value={template.content}
-          onChange={(value) => handleChange('content', value)}
-          theme="snow"
-          className="custom-quill"
-        />
+        <div className="relative">
+          <CustomToolbar onEmojiClick={() => setShowEmojiPicker(p => !p)} />
+          {showEmojiPicker && (
+            <div className="absolute z-10" style={{top: '40px'}}>
+              <EmojiPicker onEmojiClick={onEmojiClick} />
+            </div>
+          )}
+          <ReactQuill
+            ref={quillRef}
+            value={template.content}
+            onChange={(value) => handleChange('content', value)}
+            theme="snow"
+            modules={{
+              toolbar: {
+                container: '#toolbar',
+              },
+            }}
+            className="custom-quill"
+          />
+        </div>
         <style>{`.custom-quill .ql-editor { color: ${darkMode ? 'white' : '#1f2937'}; }`}</style>
       </div>
 
       {isPreview && (
-        <div className="border-l pl-8">
+        <div className="pl-8 border-l">
           <h3 className={`font-semibold mb-4 text-2xl ${darkMode ? 'text-white' : 'text-gray-800'}`}>
             📧 Email Preview
           </h3>
           <div
             className={`p-4 rounded shadow border max-h-[600px] overflow-auto ${
-              darkMode ? 'bg-gray-800 text-white border-gray-700' : 'bg-gray-50 text-gray-900 border-gray-300'
+              darkMode ? 'text-white bg-gray-800 border-gray-700' : 'text-gray-900 bg-gray-50 border-gray-300'
             }`}
           >
-            <p className="font-bold text-xl mb-6">
+            <p className="mb-6 text-xl font-bold">
               Subject: {template.subject}
             </p>
 
             <div
             ref={previewRef}
-              className="prose max-w-none dark:prose-invert"
+              className="max-w-none prose dark:prose-invert"
               dangerouslySetInnerHTML={{
                 __html: generatePreviewHTML(template.content)
               }}
@@ -316,17 +342,17 @@ const AddTemplateForm = ({ onSubmit, onCancel, editingTemplate, darkMode = false
 
     {showRemoveModal && (
       <div
-        className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-60"
+        className="flex fixed inset-0 justify-center items-center bg-black bg-opacity-50 z-60"
         onClick={() => setShowRemoveModal(false)}
       >
-        <div className={`bg-white dark:bg-gray-900 p-6 rounded-lg max-w-md w-full`} onClick={(e) => e.stopPropagation()}>
-          <h3 className="text-lg font-semibold mb-4 text-black dark:text-white">Remove Placeholders</h3>
-          <div className="max-h-60 overflow-auto mb-4">
+        <div className={`p-6 w-full max-w-md bg-white rounded-lg dark:bg-gray-900`} onClick={(e) => e.stopPropagation()}>
+          <h3 className="mb-4 text-lg font-semibold text-black dark:text-white">Remove Placeholders</h3>
+          <div className="overflow-auto mb-4 max-h-60">
             {placeholderOptions.length === 0 && (
               <p className="text-gray-600 dark:text-gray-300">No placeholders available.</p>
             )}
             {placeholderOptions.map((ph) => (
-              <label key={ph} className="flex items-center gap-2 mb-2 cursor-pointer text-black dark:text-white">
+              <label key={ph} className="flex gap-2 items-center mb-2 text-black cursor-pointer dark:text-white">
                 <input
                   type="checkbox"
                   checked={placeholdersToRemove.includes(ph)}
@@ -336,10 +362,10 @@ const AddTemplateForm = ({ onSubmit, onCancel, editingTemplate, darkMode = false
               </label>
             ))}
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex gap-2 justify-end">
             <button
               onClick={() => setShowRemoveModal(false)}
-              className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-700 text-black dark:text-white hover:bg-gray-400"
+              className="px-4 py-2 text-black bg-gray-300 rounded dark:bg-gray-700 dark:text-white hover:bg-gray-400"
             >
               Cancel
             </button>
@@ -360,5 +386,25 @@ const AddTemplateForm = ({ onSubmit, onCancel, editingTemplate, darkMode = false
 );
 
 };
+
+const CustomToolbar = ({ onEmojiClick }) => (
+  <div id="toolbar">
+    <select className="ql-header" defaultValue="">
+      <option value="1">Heading</option>
+      <option value="2">Subheading</option>
+      <option value="">Normal</option>
+    </select>
+    <button className="ql-bold"></button>
+    <button className="ql-italic"></button>
+    <button className="ql-underline"></button>
+    <button className="ql-link"></button>
+    <button className="ql-list" value="ordered"></button>
+    <button className="ql-list" value="bullet"></button>
+    <button className="ql-clean"></button>
+    <button type="button" onClick={onEmojiClick}>
+      <Smile size={18} />
+    </button>
+  </div>
+);
 
 export default AddTemplateForm;

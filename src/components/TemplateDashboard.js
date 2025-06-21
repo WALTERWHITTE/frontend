@@ -13,6 +13,8 @@ const TemplateDashboard = () => {
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingTemplateId, setDeletingTemplateId] = useState(null);
 
   useEffect(() => {
     loadTemplates();
@@ -32,14 +34,22 @@ const TemplateDashboard = () => {
     setShowAddForm(true);
   };
 
-  const handleDelete = async (templateId) => {
-    if (!window.confirm('Are you sure you want to delete this template?')) return;
+  const handleDelete = (templateId) => {
+    setDeletingTemplateId(templateId);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingTemplateId) return;
     try {
-      await deleteTemplateById(templateId);
-      setTemplates((prev) => prev.filter((t) => t.templateId !== templateId));
+      await deleteTemplateById(deletingTemplateId);
+      setTemplates((prev) => prev.filter((t) => t.templateId !== deletingTemplateId));
     } catch (error) {
       console.error('Delete error:', error);
       alert('Failed to delete template.');
+    } finally {
+      setShowDeleteConfirm(false);
+      setDeletingTemplateId(null);
     }
   };
 
@@ -120,6 +130,30 @@ const TemplateDashboard = () => {
           </div>
         )}
 
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50 backdrop-blur-sm animate-fadeIn">
+            <div className={`p-6 rounded-lg shadow-xl ${isDarkMode ? 'text-white bg-neutral-900' : 'bg-white'}`}>
+              <h2 className="mb-4 text-lg font-semibold">Confirm Deletion</h2>
+              <p className="mb-6">Are you sure you want to delete this template? This action cannot be undone.</p>
+              <div className="flex gap-4 justify-end">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className={`px-4 py-2 rounded-md transition ${isDarkMode ? 'bg-neutral-700 hover:bg-neutral-600' : 'bg-gray-200 hover:bg-gray-300'}`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="px-4 py-2 text-white bg-red-600 rounded-md transition hover:bg-red-700"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className={`px-6 py-4 border-b ${isDarkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
           <div className="flex justify-between items-center">
@@ -176,29 +210,42 @@ const TemplateDashboard = () => {
             {filteredTemplates.map((template) => (
               <div
                 key={template.templateId}
-                className={`p-4 border rounded-lg shadow-sm transform transition-all duration-300 hover:scale-[1.02] hover:shadow-md cursor-pointer animate-fadeIn ${isDarkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-300'}`}
+                className={`flex flex-col justify-between p-4 border rounded-lg shadow-sm transform transition-all duration-300 hover:scale-[1.02] hover:shadow-md animate-fadeIn ${isDarkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-300'}`}
               >
-                <div className="flex justify-between items-center mb-2">
-                  <div>
-                    <h3 className="text-lg font-semibold">{template.templateName}</h3>
-                    <p className="text-xs text-gray-300 dark:text-neutral-500">ID: {template.templateId}</p>
+                <div>
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h3 className="text-lg font-semibold">{template.templateName}</h3>
+                      <p className="text-xs text-gray-300 dark:text-neutral-500">ID: {template.templateId}</p>
+                    </div>
+                    <div className="relative group">
+                      <Copy 
+                        className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-white" 
+                        onClick={(e) => { e.stopPropagation(); handleCopy(template); }} 
+                      />
+                       <span className="absolute -top-8 left-1/2 px-2 py-1 text-xs text-white whitespace-nowrap bg-black rounded-md opacity-0 transition-opacity -translate-x-1/2 group-hover:opacity-100">
+                        Copy Template
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="flex gap-2">
-                    <Copy className="w-4 h-4 text-gray-500 hover:text-gray-700 dark:hover:text-white" onClick={() => handleCopy(template)} />
-                    <Edit className="w-4 h-4 text-blue-500 hover:text-blue-700" onClick={() => handleEdit(template)} />
-                    <Trash2 className="w-4 h-4 text-red-500 hover:text-red-700" onClick={() => handleDelete(template.templateId)} />
-                  </div>
+                  <p className="mb-1 text-sm text-gray-600 dark:text-neutral-400">Subject: {template.subject}</p>
+                  <div
+                    className="max-w-none text-xs text-gray-500 dark:text-neutral-400 prose dark:prose-invert"
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(template.content)
+                        .replace(/\$\{(\w+)\}/g, '<span class="px-1 text-white rounded bg-neutral-700">$1</span>')
+                    }}
+                  ></div>
                 </div>
-
-                <p className="mb-1 text-sm text-gray-600 dark:text-neutral-400">Subject: {template.subject}</p>
-                <div
-                  className="max-w-none text-xs text-gray-500 dark:text-neutral-400 prose dark:prose-invert"
-                  dangerouslySetInnerHTML={{
-                    __html: DOMPurify.sanitize(template.content)
-                      .replace(/\$\{(\w+)\}/g, '<span class="px-1 text-white rounded bg-neutral-700">$1</span>')
-                  }}
-                ></div>
+                <div className="flex gap-2 justify-end pt-4 mt-4 border-t border-gray-200 dark:border-neutral-800">
+                  <button onClick={(e) => { e.stopPropagation(); handleEdit(template); }} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${isDarkMode ? 'bg-neutral-800 text-neutral-200 hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} border ${isDarkMode ? 'border-neutral-700' : 'border-gray-300'}`}>
+                      <Edit size={14}/> Edit
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); handleDelete(template.templateId); }} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${isDarkMode ? 'bg-red-900/20 text-red-400 hover:bg-red-900/40 border border-red-900/30' : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'}`}>
+                      <Trash2 size={14}/> Delete
+                  </button>
+                </div>
               </div>
             ))}
           </div>

@@ -13,6 +13,7 @@ const LogDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const [isActionsOpen, setIsActionsOpen] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   useEffect(() => {
     loadLogs();
@@ -45,19 +46,19 @@ const LogDashboard = () => {
     }
   };
 
-  const clearLogs = async () => {
-  const confirmClear = window.confirm('Are you sure you want to delete all logs? This cannot be undone.');
-  if (!confirmClear) return;
+  const clearLogs = () => {
+    setShowClearConfirm(true);
+  };
 
-  const success = await clearLogsAPI();
-  if (success) {
-    await loadLogs();
-    alert('All logs cleared successfully!');
-  } else {
-    alert('Failed to clear logs. Check console for more details.');
-  }
-};
-
+  const handleConfirmClear = async () => {
+    setShowClearConfirm(false);
+    const success = await clearLogsAPI();
+    if (success) {
+      await loadLogs();
+    } else {
+      alert('Failed to clear logs. Check console for more details.');
+    }
+  };
 
   const filteredLogs = logs.filter((log) => {
     const term = searchTerm.toLowerCase();
@@ -175,6 +176,28 @@ const LogDashboard = () => {
             </table>
           </div>
         </div>
+         {showClearConfirm && (
+          <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50 backdrop-blur-sm animate-fadeIn">
+            <div className={`p-6 rounded-lg shadow-xl ${isDarkMode ? 'text-white bg-neutral-900' : 'bg-white'}`}>
+              <h2 className="mb-4 text-lg font-semibold">Confirm Clear Logs</h2>
+              <p className="mb-6">Are you sure you want to clear all logs? This action cannot be undone.</p>
+              <div className="flex gap-4 justify-end">
+                <button
+                  onClick={() => setShowClearConfirm(false)}
+                  className={`px-4 py-2 rounded-md transition ${isDarkMode ? 'bg-neutral-700 hover:bg-neutral-600' : 'bg-gray-200 hover:bg-gray-300'}`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmClear}
+                  className="px-4 py-2 text-white bg-red-600 rounded-md transition hover:bg-red-700"
+                >
+                  Confirm Clear
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

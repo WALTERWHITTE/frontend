@@ -20,6 +20,8 @@ const ClientProductsPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [clients, setClients] = useState([]);
   const [editData, setEditData] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingClientId, setDeletingClientId] = useState(null);
 
   const colorClasses = [
     'bg-blue-100 text-blue-800',
@@ -62,13 +64,22 @@ const ClientProductsPage = () => {
     loadClientProducts();
   }, []);
 
-  const handleDelete = async (clientId) => {
+  const handleDelete = (clientId) => {
+    setDeletingClientId(clientId);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingClientId) return;
     try {
       const token = localStorage.getItem('token');
-      await deleteClientProductById(token, clientId);
+      await deleteClientProductById(token, deletingClientId);
       loadClientProducts();
     } catch (err) {
       console.error('Delete failed:', err);
+    } finally {
+      setShowDeleteConfirm(false);
+      setDeletingClientId(null);
     }
   };
 
@@ -152,6 +163,29 @@ const filteredEntries = Object.entries(clientProductList).filter(([, value]) => 
   </div>
 )}
 
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50 backdrop-blur-sm animate-fadeIn">
+          <div className={`p-6 rounded-lg shadow-xl ${isDarkMode ? 'text-white bg-neutral-900' : 'bg-white'}`}>
+            <h2 className="mb-4 text-lg font-semibold">Confirm Deletion</h2>
+            <p className="mb-6">Are you sure you want to delete this mapping? This action cannot be undone.</p>
+            <div className="flex gap-4 justify-end">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className={`px-4 py-2 rounded-md transition ${isDarkMode ? 'bg-neutral-700 hover:bg-neutral-600' : 'bg-gray-200 hover:bg-gray-300'}`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 text-white bg-red-600 rounded-md transition hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className={`px-6 py-4 border-b ${isDarkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
         <div className="flex justify-between items-center">
@@ -197,30 +231,44 @@ const filteredEntries = Object.entries(clientProductList).filter(([, value]) => 
           {filteredEntries.map(([clientId, value], index) => (
             <div
               key={clientId}
-              className={`p-6 transition-all duration-300 border rounded-lg shadow-sm hover:scale-[1.02] ${isDarkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-300'}`}
+              className={`flex flex-col justify-between p-6 transition-all duration-300 border rounded-lg shadow-sm hover:scale-[1.02] ${isDarkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-300'}`}
             >
-              <div className="flex justify-between mb-2">
-                <div>
-                  <h3 className="text-lg font-semibold">{value.clientName}</h3>
-                  <p className="text-sm text-gray-500">{value.products.length} Products</p>
-                </div>
-                <div className="flex gap-2">
-                  <Copy className="w-4 h-4 text-gray-500 hover:text-gray-700 dark:hover:text-white" />
-                  <Edit className="w-4 h-4 text-blue-500 hover:text-blue-700" onClick={() => handleOpenEdit(parseInt(clientId))} />
-                  <Trash2 className="w-4 h-4 text-red-500 hover:text-red-700" onClick={() => handleDelete(parseInt(clientId))} />
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2 mt-4">
-                {value.products.map(({ productName, productId }, i) => (
-                  <div
-                    key={productId}
-                    className={`px-3 py-1 text-xs font-medium rounded-full ${colorClasses[(index + i) % colorClasses.length]}`}
-                  >
-                    {productName}
+              <div>
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h3 className="text-lg font-semibold">{value.clientName}</h3>
+                    <p className="text-sm text-gray-500">{value.products.length} Products</p>
                   </div>
-                ))}
+                   <div className="relative group">
+                      <Copy 
+                        className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-white" 
+                        onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(value.products.map(p => p.productName).join(', ')); }} 
+                      />
+                       <span className="absolute -top-8 left-1/2 px-2 py-1 text-xs text-white whitespace-nowrap bg-black rounded-md opacity-0 transition-opacity -translate-x-1/2 group-hover:opacity-100">
+                        Copy Client's product details
+                      </span>
+                    </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {value.products.map(({ productName, productId }, i) => (
+                    <div
+                      key={productId}
+                      className={`px-3 py-1 text-xs font-medium rounded-full ${colorClasses[(index + i) % colorClasses.length]}`}
+                    >
+                      {productName}
+                    </div>
+                  ))}
+                </div>
               </div>
+               <div className="flex gap-2 justify-end pt-4 mt-4 border-t border-gray-200 dark:border-neutral-800">
+                  <button onClick={(e) => { e.stopPropagation(); handleOpenEdit(parseInt(clientId)); }} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${isDarkMode ? 'bg-neutral-800 text-neutral-200 hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} border ${isDarkMode ? 'border-neutral-700' : 'border-gray-300'}`}>
+                      <Edit size={14}/> Edit
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); handleDelete(parseInt(clientId)); }} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${isDarkMode ? 'bg-red-900/20 text-red-400 hover:bg-red-900/40 border border-red-900/30' : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'}`}>
+                      <Trash2 size={14}/> Delete
+                  </button>
+                </div>
             </div>
           ))}
         </div>

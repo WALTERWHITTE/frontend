@@ -230,7 +230,7 @@ const ProductsPage = () => {
 
         <div className="flex items-center">
           <button
-            className="flex gap-2 items-center px-4 py-2 text-white bg-black rounded-lg hover:bg-gray-800"
+            className={`flex gap-2 items-center px-4 py-2 rounded-lg ${isDarkMode ? 'text-white bg-neutral-800 hover:bg-neutral-700' : 'text-white bg-gray-900 hover:bg-gray-800'}`}
             onClick={() => setShowAddProduct(true)}
           >
             <Plus size={16} />

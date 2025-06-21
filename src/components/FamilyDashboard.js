@@ -16,7 +16,8 @@ const FamilyDashboard = () => {
   const [showForm, setShowForm] = useState(false);
   const [editFamily, setEditFamily] = useState(null);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
-  const [deleteFamilyId, setDeleteFamilyId] = useState(null);
+  const [deletingFamilyId, setDeletingFamilyId] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => { fetchData(); }, []);
 
@@ -115,24 +116,31 @@ const handleAddOrUpdateFamily = async (family) => {
   }
 };
 
-  // Inside handleDeleteFamily
-const handleDeleteFamily = async () => {
-  const token = localStorage.getItem('token');
-  try {
-    const res = await fetch(`${API_BASE_URL}/families/${deleteFamilyId}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (res.ok) {
-      await fetchData();  // Fetch before clearing state
-      setDeleteFamilyId(null);
-    } else {
-      console.error('Failed to delete family');
+  const handleDelete = (familyId) => {
+    setDeletingFamilyId(familyId);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingFamilyId) return;
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${API_BASE_URL}/families/${deletingFamilyId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        await fetchData();
+      } else {
+        console.error('Failed to delete family');
+      }
+    } catch (err) {
+      console.error('Failed to delete family:', err);
+    } finally {
+      setShowDeleteConfirm(false);
+      setDeletingFamilyId(null);
     }
-  } catch (err) {
-    console.error('Failed to delete family:', err);
-  }
-};
+  };
 
 
   const filteredFamilies = families.filter(f =>
@@ -179,14 +187,24 @@ const handleDeleteFamily = async () => {
     )}
 
     {/* Delete Confirmation Modal */}
-    {deleteFamilyId && (
-      <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50">
-        <div className={`max-w-sm p-6 rounded-lg shadow-lg ${isDarkMode ? 'text-white bg-neutral-900' : 'text-black bg-white'}`}>
-          <h2 className="mb-4 text-lg font-semibold">Delete Family</h2>
-          <p className="mb-6">Are you sure you want to delete this family?</p>
+    {showDeleteConfirm && (
+      <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50 backdrop-blur-sm animate-fadeIn">
+        <div className={`p-6 rounded-lg shadow-xl ${isDarkMode ? 'text-white bg-neutral-900' : 'bg-white'}`}>
+          <h2 className="mb-4 text-lg font-semibold">Confirm Deletion</h2>
+          <p className="mb-6">Are you sure you want to delete this family? This action cannot be undone.</p>
           <div className="flex gap-4 justify-end">
-            <button onClick={() => setDeleteFamilyId(null)} className="px-4 py-2 bg-gray-200 rounded">Cancel</button>
-            <button onClick={handleDeleteFamily} className="px-4 py-2 text-white bg-red-600 rounded">Delete</button>
+            <button
+              onClick={() => setShowDeleteConfirm(false)}
+              className={`px-4 py-2 rounded-md transition ${isDarkMode ? 'bg-neutral-700 hover:bg-neutral-600' : 'bg-gray-200 hover:bg-gray-300'}`}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmDelete}
+              className="px-4 py-2 text-white bg-red-600 rounded-md transition hover:bg-red-700"
+            >
+              Delete
+            </button>
           </div>
         </div>
       </div>
@@ -253,24 +271,39 @@ const handleDeleteFamily = async () => {
           <div 
             key={family.familyId} 
             onClick={() => setSelectedFamily(family)} 
-            className={`p-4 border rounded-lg shadow-sm hover:scale-[1.02] transition cursor-pointer ${isDarkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-300'}`}
+            className={`flex flex-col justify-between p-4 border rounded-lg shadow-sm hover:scale-[1.02] transition cursor-pointer ${isDarkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-300'}`}
           >
-            <div className="flex justify-between mb-2">
-              <div>
-                <h3 className="text-lg font-semibold">{family.familyName}</h3>
-                <p className={`text-xs ${getLabelTextColor(isDarkMode)}`}>ID: {family.familyId}</p>
+            <div>
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h3 className="text-lg font-semibold">{family.familyName}</h3>
+                  <p className={`text-xs ${getLabelTextColor(isDarkMode)}`}>ID: {family.familyId}</p>
+                </div>
+                <div className="relative group">
+                  <Copy 
+                    className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-white" 
+                    onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(JSON.stringify(family, null, 2)); }} 
+                  />
+                  <span className="absolute -top-8 left-1/2 px-2 py-1 text-xs text-white whitespace-nowrap bg-black rounded-md opacity-0 transition-opacity -translate-x-1/2 group-hover:opacity-100">
+                    Copy Family details
+                  </span>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Copy className="w-4 h-4 text-gray-500 hover:text-gray-700 dark:hover:text-white" />
-                <Edit className="w-4 h-4 text-blue-500 hover:text-blue-700" onClick={(e) => { e.stopPropagation(); handleOpenEditForm(family); }} />
-                <Trash2 className="w-4 h-4 text-red-500 hover:text-red-700" onClick={(e) => { e.stopPropagation(); setDeleteFamilyId(family.familyId); }} />
+
+              <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm text-gray-300 dark:text-neutral-400">
+                <div><span className={`text-xs ${getLabelTextColor(isDarkMode)}`}>Address:</span> {family.familyAddress}</div>
+                <div><span className={`text-xs ${getLabelTextColor(isDarkMode)}`}>Head:</span> {getHeadName(family.familyHeadId)}</div>
+                <div><span className={`text-xs ${getLabelTextColor(isDarkMode)}`}>Created:</span> {family.createdAt ? new Date(family.createdAt).toLocaleString() : '--'}</div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm text-gray-300 dark:text-neutral-400">
-              <div><span className={`text-xs ${getLabelTextColor(isDarkMode)}`}>Address:</span> {family.familyAddress}</div>
-              <div><span className={`text-xs ${getLabelTextColor(isDarkMode)}`}>Head:</span> {getHeadName(family.familyHeadId)}</div>
-              <div><span className={`text-xs ${getLabelTextColor(isDarkMode)}`}>Created:</span> {family.createdAt ? new Date(family.createdAt).toLocaleString() : '--'}</div>
+            <div className="flex gap-2 justify-end pt-4 mt-4 border-t border-gray-200 dark:border-neutral-800">
+              <button onClick={(e) => { e.stopPropagation(); handleOpenEditForm(family); }} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${isDarkMode ? 'bg-neutral-800 text-neutral-200 hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} border ${isDarkMode ? 'border-neutral-700' : 'border-gray-300'}`}>
+                <Edit size={14}/> Edit
+              </button>
+              <button onClick={(e) => { e.stopPropagation(); handleDelete(family.familyId); }} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${isDarkMode ? 'bg-red-900/20 text-red-400 hover:bg-red-900/40 border border-red-900/30' : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'}`}>
+                <Trash2 size={14}/> Delete
+              </button>
             </div>
           </div>
         ))}
