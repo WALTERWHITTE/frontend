@@ -24,7 +24,10 @@ const ActionsMenu = ({ isOpen, onToggle, isDarkMode }) => {
   return (
     <div className="relative">
       <button
-        onClick={onToggle}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
         className={`flex items-center gap-2 font-medium ${
           isDarkMode ? 'text-gray-500 hover:text-white' : 'text-gray-400 hover:text-gray-700'
         } focus:outline-none transition-colors duration-300`}
@@ -38,6 +41,7 @@ const ActionsMenu = ({ isOpen, onToggle, isDarkMode }) => {
 
       {isOpen && (
         <div
+          onClick={(e) => e.stopPropagation()}
           className={`absolute left-0 z-10 w-56 mt-2 ${
             isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
           } border rounded-lg shadow-lg top-full transition-all duration-300`}

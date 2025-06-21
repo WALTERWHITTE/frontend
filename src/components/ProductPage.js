@@ -9,7 +9,7 @@ import {
   LinearScale,
   BarElement,
 } from 'chart.js';
-import { Home, Plus, Edit, Trash2 } from 'lucide-react';
+import { Home, Plus, Edit, Trash2, Sun, Moon } from 'lucide-react';
 import ActionsMenu from './ActionsMenu';
 import {
   fetchProducts,
@@ -45,14 +45,14 @@ const EditableRow = ({ id, name, onUpdate, onDelete }) => {
     <input
       value={editedName}
       onChange={e => setEditedName(e.target.value)}
-      className="px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+      className="px-2 py-1 rounded border dark:bg-gray-800 dark:border-gray-600 dark:text-white"
     />
   ) : (
     <span className={isDarkMode ? 'text-white' : 'text-gray-800'}>{name}</span>
   )}
 </td>
 
-      <td className="px-4 py-2 border text-right space-x-2 dark:border-gray-700">
+      <td className="px-4 py-2 space-x-2 text-right border dark:border-gray-700">
         {isEditing ? (
           <button
             onClick={handleSave}
@@ -63,14 +63,14 @@ const EditableRow = ({ id, name, onUpdate, onDelete }) => {
         ) : (
           <button
             onClick={() => setIsEditing(true)}
-            className="px-2 py-1 text-sm text-blue-600 border border-blue-600 rounded"
+            className="px-2 py-1 text-sm text-blue-600 rounded border border-blue-600"
           >
             <Edit size={14} />
           </button>
         )}
         <button
           onClick={onDelete}
-          className="px-2 py-1 text-sm text-red-600 border border-red-600 rounded"
+          className="px-2 py-1 text-sm text-red-600 rounded border border-red-600"
         >
           <Trash2 size={14} />
         </button>
@@ -135,7 +135,7 @@ const ProductsPage = () => {
     };
 
     return (
-      <div className={`max-w-md p-6 mx-auto rounded-lg shadow-lg ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}>
+      <div className={`max-w-md p-6 mx-auto rounded-lg shadow-lg ${isDarkMode ? 'text-white bg-gray-800' : 'text-black bg-white'}`}>
         <h2 className="mb-4 text-xl font-semibold">Add New Product</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
@@ -143,11 +143,11 @@ const ProductsPage = () => {
             placeholder="Product Name"
             value={productName}
             onChange={e => setProductName(e.target.value)}
-            className={`w-full px-4 py-2 border rounded-md ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-white border-gray-300 text-black'}`}
+            className={`w-full px-4 py-2 border rounded-md ${isDarkMode ? 'text-white bg-gray-700 border-gray-600' : 'text-black bg-white border-gray-300'}`}
             required
           />
-          <div className="flex justify-end gap-4">
-            <button type="button" onClick={onClose} className={`px-4 py-2 rounded ${isDarkMode ? 'bg-gray-600 text-white' : 'bg-gray-200 text-black'}`}>Cancel</button>
+          <div className="flex gap-4 justify-end">
+            <button type="button" onClick={onClose} className={`px-4 py-2 rounded ${isDarkMode ? 'text-white bg-gray-600' : 'text-black bg-gray-200'}`}>Cancel</button>
             <button type="submit" className="px-4 py-2 text-white bg-blue-600 rounded">Add</button>
           </div>
         </form>
@@ -191,22 +191,30 @@ const ProductsPage = () => {
   };
 
   return (
-    <div className={`${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'} min-h-screen`}>
-      <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} px-6 py-4 border-b flex justify-between items-center`}>
-        <div className="flex items-center gap-4">
+    <div className={`${isDarkMode ? 'text-white bg-black' : 'text-black bg-gray-50'} min-h-screen`}>
+      <div className={`${isDarkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'} px-6 py-4 border-b flex justify-between items-center`}>
+        <div className="flex gap-4 items-center">
           <Home className="text-gray-400" size={22} />
           <h1 className="text-2xl font-semibold">Products Dashboard</h1>
         </div>
         <button
           onClick={toggleDarkMode}
-          className={`w-20 h-10 flex items-center justify-center rounded-full border shadow-sm transition-all duration-300 hover:scale-105 active:scale-95
-          ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white hover:text-gray-300' : 'bg-white border-gray-300 text-black hover:text-gray-500'}`}
+          className={`
+            p-2 rounded-full border shadow-sm transition-all duration-300 
+            hover:scale-105 active:scale-95 
+            hover:bg-gray-100 dark:hover:bg-neutral-800
+            ${
+              isDarkMode
+               ? 'text-neutral-200 bg-neutral-900 border-neutral-800 hover:text-neutral-100'
+               : 'text-gray-700 bg-white border-gray-300 hover:text-gray-300'
+            }
+          `}
         >
-          {isDarkMode ? '🌙 Dark' : '☀️ Light'}
+          {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
         </button>
       </div>
 
-      <div className="flex items-start justify-between px-6 pt-6 pb-2">
+      <div className="flex justify-between items-start px-6 pt-6 pb-2">
         <div>
           <h2 className="text-xl font-semibold">Manage Products</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400">Manage your products</p>
@@ -222,7 +230,7 @@ const ProductsPage = () => {
 
         <div className="flex items-center">
           <button
-            className="flex items-center gap-2 px-4 py-2 text-white bg-black rounded-lg hover:bg-gray-800"
+            className="flex gap-2 items-center px-4 py-2 text-white bg-black rounded-lg hover:bg-gray-800"
             onClick={() => setShowAddProduct(true)}
           >
             <Plus size={16} />
@@ -232,12 +240,12 @@ const ProductsPage = () => {
       </div>
 
       <div className="px-6 mt-4">
-        <table className={`w-full border ${isDarkMode ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-black border-gray-300'}`}>
+        <table className={`w-full border ${isDarkMode ? 'text-white bg-gray-800 border-gray-700' : 'text-black bg-white border-gray-300'}`}>
           <thead>
-            <tr className={`text-left text-sm ${isDarkMode ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'}`}>
+            <tr className={`text-left text-sm ${isDarkMode ? 'text-gray-200 bg-gray-700' : 'text-gray-700 bg-gray-100'}`}>
               <th className="px-4 py-2 border dark:border-gray-700">Product ID</th>
               <th className="px-4 py-2 border dark:border-gray-700">Product Name</th>
-              <th className="px-4 py-2 border text-right dark:border-gray-700">Actions</th>
+              <th className="px-4 py-2 text-right border dark:border-gray-700">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -269,7 +277,7 @@ const ProductsPage = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-8 px-6 py-8 md:grid-cols-2">
-        <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-black'} p-6 border rounded-lg shadow-sm`}>
+        <div className={`${isDarkMode ? 'text-white bg-gray-800 border-gray-700' : 'text-black bg-white border-gray-200'} p-6 border rounded-lg shadow-sm`}>
           <h2 className="mb-4 text-lg font-semibold">
             Product Distribution (Clients)
           </h2>
@@ -284,7 +292,7 @@ const ProductsPage = () => {
           </div>
         </div>
 
-        <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-black'} p-6 border rounded-lg shadow-sm`}>
+        <div className={`${isDarkMode ? 'text-white bg-gray-800 border-gray-700' : 'text-black bg-white border-gray-200'} p-6 border rounded-lg shadow-sm`}>
           <h2 className="mb-4 text-lg font-semibold">
             Product Popularity Bar Chart
           </h2>
@@ -309,7 +317,7 @@ const ProductsPage = () => {
       </div>
 
       {showAddProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50">
           <AddProductForm
             onClose={() => setShowAddProduct(false)}
             onAdd={handleAddProduct}

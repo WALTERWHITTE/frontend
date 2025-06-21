@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Users, Search, Copy, Edit, Trash2 } from 'lucide-react';
+import { Plus, Users, Search, Copy, Edit, Trash2, Sun, Moon } from 'lucide-react';
 import ActionsMenu from './ActionsMenu';
 import AddFamilyForm from './AddFamilyForm';
 import { useDarkMode } from '../context/DarkModeContext'; // Adjust path
@@ -145,20 +145,30 @@ const handleDeleteFamily = async () => {
   };
 
   return (
-  <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'}`} onClick={() => setIsActionsMenuOpen(false)}>
+  <div className={`min-h-screen ${isDarkMode ? 'text-white bg-black' : 'text-black bg-gray-50'}`} onClick={() => setIsActionsMenuOpen(false)}>
 
     {/* Dark Mode Toggle */}
-    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
-      <button onClick={toggleDarkMode}
-        className={`w-20 h-10 flex items-center justify-center rounded-full border shadow-sm transition-all duration-300 hover:scale-105 active:scale-95 
-        ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white hover:text-gray-300' : 'bg-white border-gray-300 text-black hover:text-gray-500'}`}>
-        {isDarkMode ? '🌙 Dark' : '☀️ Light'}
+    <div className="absolute top-4 right-4 z-50">
+      <button
+        onClick={toggleDarkMode}
+        className={`
+          p-2 rounded-full border shadow-sm transition-all duration-300 
+          hover:scale-105 active:scale-95 
+          hover:bg-gray-100 dark:hover:bg-neutral-800
+          ${
+            isDarkMode
+              ? 'text-neutral-200 bg-neutral-900 border-neutral-800 hover:text-neutral-100'
+              : 'text-gray-700 bg-white border-gray-300 hover:text-gray-300'
+          }
+        `}
+      >
+        {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
       </button>
     </div>
 
     {/* Add Family Modal */}
     {showForm && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+      <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50 backdrop-blur-sm">
         <AddFamilyForm
           clients={clients}
           initialData={editFamily}
@@ -170,11 +180,11 @@ const handleDeleteFamily = async () => {
 
     {/* Delete Confirmation Modal */}
     {deleteFamilyId && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-        <div className={`max-w-sm p-6 rounded-lg shadow-lg ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}>
+      <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50">
+        <div className={`max-w-sm p-6 rounded-lg shadow-lg ${isDarkMode ? 'text-white bg-neutral-900' : 'text-black bg-white'}`}>
           <h2 className="mb-4 text-lg font-semibold">Delete Family</h2>
           <p className="mb-6">Are you sure you want to delete this family?</p>
-          <div className="flex justify-end gap-4">
+          <div className="flex gap-4 justify-end">
             <button onClick={() => setDeleteFamilyId(null)} className="px-4 py-2 bg-gray-200 rounded">Cancel</button>
             <button onClick={handleDeleteFamily} className="px-4 py-2 text-white bg-red-600 rounded">Delete</button>
           </div>
@@ -184,8 +194,8 @@ const handleDeleteFamily = async () => {
 
     {/* Family Details Modal */}
     {selectedFamily && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => setSelectedFamily(null)}>
-        <div className={`relative w-full max-w-md p-6 rounded-lg shadow-xl transform transition-all duration-300 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-black'}`} onClick={(e) => e.stopPropagation()}>
+      <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => setSelectedFamily(null)}>
+        <div className={`relative w-full max-w-md p-6 rounded-lg shadow-xl transform transition-all duration-300 ${isDarkMode ? 'text-white bg-neutral-900' : 'text-black bg-white'}`} onClick={(e) => e.stopPropagation()}>
           <button className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" onClick={() => setSelectedFamily(null)}>✕</button>
           <h2 className="mb-4 text-xl font-bold">Family Details</h2>
           <div className="grid grid-cols-1 gap-3 text-sm">
@@ -200,10 +210,10 @@ const handleDeleteFamily = async () => {
     )}
 
     {/* Header */}
-    <div className={`px-6 py-4 border-b ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-      <div className="flex items-center justify-between">
+    <div className={`px-6 py-4 border-b ${isDarkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
+      <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">Family Dashboard</h1>
-        <button onClick={handleOpenAddForm} className="flex items-center gap-2 px-4 py-2 text-white bg-gray-900 rounded-lg hover:bg-gray-800">
+        <button onClick={handleOpenAddForm} className={`flex gap-2 items-center px-4 py-2 mr-16 rounded-lg ${isDarkMode ? 'text-white bg-neutral-800 hover:bg-neutral-700' : 'text-white bg-gray-900 hover:bg-gray-800'}`}>
           <Plus size={16} /> Add Family
         </button>
       </div>
@@ -211,29 +221,29 @@ const handleDeleteFamily = async () => {
 
     {/* Search & Actions */}
     <div className="p-6" onClick={(e) => e.stopPropagation()}>
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
-          <Users className="text-gray-500 dark:text-gray-400" size={20} />
+      <div className="flex justify-between items-center mb-8">
+        <div className="flex gap-3 items-center">
+          <Users className="text-gray-500 dark:text-neutral-400" size={20} />
           <div>
             <h2 className="text-xl font-semibold">Families</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Manage your families</p>
+            <p className="text-sm text-gray-500 dark:text-neutral-400">Manage your families</p>
           </div>
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          <Search className="absolute left-3 top-1/2 text-gray-400 -translate-y-1/2" size={16} />
           <input
             type="text"
             placeholder="Search families..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={`w-64 py-2 pl-10 pr-4 border rounded-lg outline-none transition focus:ring-2 focus:ring-blue-500 
-            ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-300' : 'bg-white border-gray-300 text-black placeholder-gray-500'}`}
+            ${isDarkMode ? 'placeholder-neutral-400 text-neutral-200 bg-neutral-800 border-neutral-700' : 'placeholder-gray-500 text-black bg-white border-gray-300'}`}
           />
         </div>
       </div>
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex justify-between items-center mb-6">
         <ActionsMenu isDarkMode={isDarkMode} isOpen={isActionsMenuOpen} onToggle={() => setIsActionsMenuOpen(!isActionsMenuOpen)} />
       </div>
 
@@ -243,7 +253,7 @@ const handleDeleteFamily = async () => {
           <div 
             key={family.familyId} 
             onClick={() => setSelectedFamily(family)} 
-            className={`p-4 border rounded-lg shadow-sm hover:scale-[1.02] transition cursor-pointer ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`}
+            className={`p-4 border rounded-lg shadow-sm hover:scale-[1.02] transition cursor-pointer ${isDarkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-300'}`}
           >
             <div className="flex justify-between mb-2">
               <div>
@@ -257,7 +267,7 @@ const handleDeleteFamily = async () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-gray-300 dark:text-gray-400">
+            <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm text-gray-300 dark:text-neutral-400">
               <div><span className={`text-xs ${getLabelTextColor(isDarkMode)}`}>Address:</span> {family.familyAddress}</div>
               <div><span className={`text-xs ${getLabelTextColor(isDarkMode)}`}>Head:</span> {getHeadName(family.familyHeadId)}</div>
               <div><span className={`text-xs ${getLabelTextColor(isDarkMode)}`}>Created:</span> {family.createdAt ? new Date(family.createdAt).toLocaleString() : '--'}</div>

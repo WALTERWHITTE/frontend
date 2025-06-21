@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, Send, Mail } from 'lucide-react';
+import { Eye, Send, Mail, Sun, Moon } from 'lucide-react';
 import { useDarkMode } from '../context/DarkModeContext';
 import TemplateSelectorModal from './TemplateSelectorModal';
 import { fetchProducts } from '../data/products';
@@ -145,30 +145,37 @@ const allDone = Object.values(latestStatuses).every(status => status !== 'sendin
 
   return (
     <div className={isDarkMode ? 'dark' : ''}>
-      <div className={`min-h-screen px-6 py-4 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'}`}>
-        <div className="flex justify-between items-center border-b pb-4 px-4 mb-6">
-          <h1 className="text-2xl font-semibold flex items-center gap-2">
+      <div className={`min-h-screen px-6 py-4 ${isDarkMode ? 'bg-black text-neutral-200' : 'text-black bg-gray-50'}`}>
+        <div className="flex justify-between items-center px-4 pb-4 mb-6 border-b">
+          <h1 className="flex gap-2 items-center text-2xl font-semibold">
             Send Mail Dashboard
           </h1>
           <button
             onClick={toggleDarkMode}
-            className={`border px-4 py-2 rounded-full flex items-center gap-2 text-sm shadow ${
-              isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'
-            }`}
+            className={`
+              p-2 rounded-full border shadow-sm transition-all duration-300 
+              hover:scale-105 active:scale-95 
+              hover:bg-gray-100 dark:hover:bg-neutral-800
+              ${
+                isDarkMode
+                 ? 'text-neutral-200 bg-neutral-900 border-neutral-800 hover:text-neutral-100'
+                 : 'text-gray-700 bg-white border-gray-300 hover:text-gray-300'
+              }
+            `}
           >
-            {isDarkMode ? '🌙 Dark' : '☀️ Light'}
+            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
         </div>
 
-        <div className="flex items-center gap-3 py-4 ">
-              <Mail className="text-gray-500 dark:text-gray-400" size={20} />
+        <div className="flex gap-3 items-center py-4">
+              <Mail className="text-gray-500 dark:text-neutral-400" size={20} />
               <div>
                 <h2 className="text-xl font-semibold">Send Mail</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Send bulk mails</p>
+                <p className="text-sm text-gray-500 dark:text-neutral-400">Send bulk mails</p>
               </div>
             </div>
 
-         <div className="flex items-center justify-between mb-6">
+         <div className="flex justify-between items-center mb-6">
   <ActionsMenu
     isOpen={isActionsOpen}
     onToggle={() => setIsActionsOpen(!isActionsOpen)}
@@ -185,8 +192,8 @@ const allDone = Object.values(latestStatuses).every(status => status !== 'sendin
       onClick={() => setShowTemplateSelector(true)}
       className={`relative rounded-lg p-4 border shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 ${
         isDarkMode
-          ? 'bg-gray-800 border-gray-700 text-white hover:bg-gray-700'
-          : 'bg-white border-gray-200 text-black hover:bg-gray-100'
+          ? 'text-white bg-gray-800 border-gray-700 hover:bg-gray-700'
+          : 'text-black bg-white border-gray-200 hover:bg-gray-100'
       }`}
     >
       <div className="flex justify-between items-center mb-1">
@@ -196,23 +203,23 @@ const allDone = Object.values(latestStatuses).every(status => status !== 'sendin
             e.stopPropagation();
             setSelectedTemplate(null);
           }}
-          className="text-red-500 hover:text-red-700 text-sm"
+          className="text-sm text-red-500 hover:text-red-700"
         >
           ❌ Clear
         </button>
       </div>
-      <p className="text-blue-400 font-medium">{selectedTemplate?.templateName || 'Unnamed Template'}</p>
-      <p className="text-sm text-gray-400 mt-1">(Click to change)</p>
+      <p className="font-medium text-blue-400">{selectedTemplate?.templateName || 'Unnamed Template'}</p>
+      <p className="mt-1 text-sm text-gray-400">(Click to change)</p>
     </div>
 
-            <div className={`rounded-lg p-4 border shadow-sm space-y-4 ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-black'}`}>
+            <div className={`rounded-lg p-4 border shadow-sm space-y-4 ${isDarkMode ? 'text-white bg-gray-800 border-gray-700' : 'text-black bg-white border-gray-200'}`}>
               <h2 className="text-lg font-semibold">🎯 Filter Clients</h2>
               <select value={filters} onChange={(e) => {
                 setFilters(e.target.value);
                 if (e.target.value === 'Clients who celebrate birthday') {
                   setSecondOption(''); setAgeValue(''); setProductIds(''); setAgeComparator('>');
                 }
-              }} className={`w-full border p-2 rounded ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`}>
+              }} className={`w-full border p-2 rounded ${isDarkMode ? 'text-white bg-gray-700 border-gray-600' : 'text-black bg-white border-gray-300'}`}>
                 <option>All clients</option>
                 <option>Family heads</option>
                 <option>Male clients</option>
@@ -220,7 +227,7 @@ const allDone = Object.values(latestStatuses).every(status => status !== 'sendin
                 <option>Clients who celebrate birthday</option>
               </select>
 
-              <select value={secondOption} onChange={(e) => setSecondOption(e.target.value)} disabled={filters === 'Clients who celebrate birthday'} className={`w-full border p-2 rounded ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`}>
+              <select value={secondOption} onChange={(e) => setSecondOption(e.target.value)} disabled={filters === 'Clients who celebrate birthday'} className={`w-full border p-2 rounded ${isDarkMode ? 'text-white bg-gray-700 border-gray-600' : 'text-black bg-white border-gray-300'}`}>
                 <option value="">None</option>
                 <option value="product">With Product</option>
                 <option value="age">By Age</option>
@@ -235,7 +242,7 @@ const allDone = Object.values(latestStatuses).every(status => status !== 'sendin
               {secondOption === 'product' && (
   <div className="grid grid-cols-2 gap-2">
     {productList.map((p) => (
-      <label key={p.productId} className="flex items-center gap-2 text-sm">
+      <label key={p.productId} className="flex gap-2 items-center text-sm">
         <input
           type="checkbox"
           checked={productIds.includes(p.productId)}
@@ -256,19 +263,19 @@ const allDone = Object.values(latestStatuses).every(status => status !== 'sendin
 
               {secondOption === 'age' && (
                 <div className="flex gap-2">
-                  <select value={ageComparator} onChange={(e) => setAgeComparator(e.target.value)} className={`border p-2 rounded ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`}>
+                  <select value={ageComparator} onChange={(e) => setAgeComparator(e.target.value)} className={`border p-2 rounded ${isDarkMode ? 'text-white bg-gray-700 border-gray-600' : 'text-black bg-white border-gray-300'}`}>
                     <option value=">">&gt;</option>
                     <option value="<">&lt;</option>
                     <option value="=">=</option>
                   </select>
-                  <input type="number" value={ageValue} onChange={(e) => setAgeValue(e.target.value)} className={`flex-1 border p-2 rounded ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-black'}`} placeholder="Age" />
+                  <input type="number" value={ageValue} onChange={(e) => setAgeValue(e.target.value)} className={`flex-1 border p-2 rounded ${isDarkMode ? 'text-white bg-gray-700 border-gray-600' : 'text-black bg-white border-gray-300'}`} placeholder="Age" />
                 </div>
               )}
             </div>
 
             <div className="flex flex-col gap-4">
               <div className="flex gap-4">
-                <button onClick={() => setShowPreviewModal(true)} className="bg-purple-600 text-white px-4 py-2 rounded shadow hover:bg-purple-700 flex items-center gap-2">
+                <button onClick={() => setShowPreviewModal(true)} className="flex gap-2 items-center px-4 py-2 text-white bg-purple-600 rounded shadow hover:bg-purple-700">
                   <Eye className="w-4 h-4" />
                   Preview Clients
                 </button>
@@ -281,8 +288,8 @@ const allDone = Object.values(latestStatuses).every(status => status !== 'sendin
   disabled={!isFilterValid()}
   className={`px-4 py-2 rounded shadow flex items-center gap-2 ${
     isFilterValid()
-      ? 'bg-blue-600 text-white hover:bg-blue-700'
-      : 'bg-gray-400 text-gray-100 cursor-not-allowed'
+      ? 'text-white bg-blue-600 hover:bg-blue-700'
+      : 'text-gray-100 bg-gray-400 cursor-not-allowed'
   }`}
 >
   <Send className="w-4 h-4" />
@@ -291,8 +298,8 @@ const allDone = Object.values(latestStatuses).every(status => status !== 'sendin
               </div>
 
               {sendStatus.length > 0 && (
-                <div className="mt-4 p-4 bg-black text-green-300 font-mono rounded shadow-inner max-h-64 overflow-y-auto text-sm">
-                  <h3 className="text-white font-semibold mb-2">📋 Mail Sending Log</h3>
+                <div className="overflow-y-auto p-4 mt-4 max-h-64 font-mono text-sm text-green-300 bg-black rounded shadow-inner">
+                  <h3 className="mb-2 font-semibold text-white">📋 Mail Sending Log</h3>
                   {sendStatus.map((client, idx) => (
                     <div key={idx}>
                       {client.status === 'sending' ? (
@@ -313,7 +320,7 @@ const allDone = Object.values(latestStatuses).every(status => status !== 'sendin
 
  {/* Mail sending complete message */}
     {allDone && (
-  <div className="mt-4 text-blue-400 font-semibold">
+  <div className="mt-4 font-semibold text-blue-400">
     📨 Mail sending has ended.
   </div>
 )}
@@ -322,7 +329,7 @@ const allDone = Object.values(latestStatuses).every(status => status !== 'sendin
               {sendStatus.length > 0 && (
   <button
     onClick={downloadCSV}
-    className="mt-2 mb-4 px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold"
+    className="px-3 py-1 mt-2 mb-4 text-sm font-semibold text-white bg-blue-600 rounded hover:bg-blue-700"
   >
     📥 Download CSV Log
   </button>

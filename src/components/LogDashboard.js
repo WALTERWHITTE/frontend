@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Bookmark } from 'lucide-react';
+import { Search, Bookmark, Sun, Moon } from 'lucide-react';
 import ActionsMenu from './ActionsMenu';
 import { fetchLogs, clearLogs as clearLogsAPI } from '../data/log';
 
@@ -73,125 +73,104 @@ const LogDashboard = () => {
     <div className={`${isDarkMode ? 'dark' : ''}`}>
       <div
         className={`min-h-screen transition-colors duration-500 ${
-          isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
+          isDarkMode ? 'bg-black text-neutral-200' : 'text-gray-900 bg-gray-50'
         }`}
         onClick={() => setIsActionsOpen(false)}
       >
         {/* Dark mode toggle */}
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
+        <div className="absolute top-4 right-4 z-50">
           <button
-  onClick={toggleDarkMode}
-  className={`
-    w-20 h-10 flex items-center justify-center rounded-full border shadow-sm transition-all duration-300 
-    hover:scale-105 active:scale-95 
-    hover:bg-gray-100 dark:hover:bg-gray-700
-    ${isDarkMode 
-    ? 'bg-gray-800 text-gray-100 border-gray-600 hover:text-gray-300' 
-    : 'bg-white text-gray-700 border-gray-300 hover:text-gray-300'}
-  `}
->
-  {isDarkMode ? '🌙 Dark' : '☀️ Light'}
-</button>
+            onClick={toggleDarkMode}
+            className={`
+              p-2 rounded-full border shadow-sm transition-all duration-300 
+              hover:scale-105 active:scale-95 
+              hover:bg-gray-100 dark:hover:bg-neutral-800
+              ${
+                isDarkMode
+                  ? 'text-neutral-200 bg-neutral-900 border-neutral-800 hover:text-neutral-100'
+                  : 'text-gray-700 bg-white border-gray-300 hover:text-gray-300'
+              }
+            `}
+          >
+            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
         </div>
 
         {/* Header */}
-        <div className={`px-6 py-4 border-b ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-          <div className="flex items-center justify-between">
+        <div className={`px-6 py-4 border-b ${isDarkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
+          <div className="flex justify-between items-center">
             <h1 className="text-2xl font-semibold">Log Dashboard</h1>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-6" onClick={(e) => e.stopPropagation()}>
-          {/* Title + Search */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <Bookmark className="text-gray-500 dark:text-gray-500" size={20} />
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-8">
+            <div className="flex gap-3 items-center">
+              <Bookmark className="text-gray-500 dark:text-neutral-400" size={20} />
               <div>
-                <h2 className="text-xl font-semibold">Logs</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Activity logs & events</p>
+                <h2 className="text-xl font-semibold">System Logs</h2>
+                <p className="text-sm text-gray-500 dark:text-neutral-400">Review system and user actions</p>
               </div>
             </div>
-
-            <div className="flex items-center gap-4">
-  <button
-    onClick={() => downloadCSV('logs.csv', logs)}
-    className="flex items-center gap-2 px-3 py-2 text-white bg-blue-900 rounded-lg hover:bg-blue-700 transition"
-  >
-    Download Logs
-  </button>
-  <button
-    onClick={clearLogs}
-    className="flex items-center gap-2 px-3 py-2 text-white bg-red-700 rounded-lg hover:bg-red-600 transition"
-  >
-    Clear Logs
-  </button>
-</div>
-
-
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-              <input
+            <div className="flex gap-4 items-center">
+               <div className="relative">
+              <Search className="absolute left-3 top-1/2 text-gray-400 -translate-y-1/2" size={16} />
+             <input
   type="text"
-  placeholder="Search Logs..."
+  placeholder="Search logs..."
   value={searchTerm}
   onChange={(e) => setSearchTerm(e.target.value)}
   className={`
     w-64 py-2 pl-10 pr-4 border rounded-lg outline-none transition focus:ring-2 focus:ring-blue-500
     ${isDarkMode 
-      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-300' 
-      : 'bg-white border-gray-300 text-black placeholder-gray-500'
+      ? 'placeholder-neutral-400 text-neutral-200 bg-neutral-800 border-neutral-700' 
+      : 'placeholder-gray-500 text-black bg-white border-gray-300'
     }
   `}
 />
             </div>
+            <button onClick={() => downloadCSV('logs.csv', filteredLogs)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${isDarkMode ? 'bg-neutral-800 text-neutral-200 hover:bg-neutral-700' : 'text-gray-800 bg-gray-200 hover:bg-gray-300'}`}>Download CSV</button>
+            <button onClick={clearLogs} className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg transition hover:bg-red-700">Clear Logs</button>
+            </div>
+           
           </div>
 
-          {/* Actions Menu */}
-          <div className="flex items-center justify-between mb-6">
-            <ActionsMenu isOpen={isActionsOpen} onToggle={() => setIsActionsOpen(!isActionsOpen)} isDarkMode={isDarkMode} />
+          <div className="flex justify-between items-center mb-6">
+            <ActionsMenu
+              isOpen={isActionsOpen}
+              onToggle={() => setIsActionsOpen((prev) => !prev)}
+              isDarkMode={isDarkMode}
+            />
           </div>
 
-          {/* Table */}
-          <div className={`rounded-xl shadow-lg overflow-hidden ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <table className="min-w-full text-sm">
-              <thead className={`${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} text-left`}>
-                <tr>
-                  <th className="p-4">Log ID</th>
-                  <th className="p-4">User</th>
-                  <th className="p-4">Action</th>
-                  <th className="p-4">Description</th>
-                  <th className="p-4">Time</th>
-                  <th className="p-4">Status</th>
+          <div className="overflow-x-auto">
+            <table className={`min-w-full border-collapse ${isDarkMode ? 'bg-neutral-900' : 'bg-white'}`}>
+              <thead>
+                <tr className={isDarkMode ? 'bg-neutral-800' : 'bg-gray-100'}>
+                  <th className="px-4 py-2 text-sm font-semibold text-left">Log ID</th>
+                  <th className="px-4 py-2 text-sm font-semibold text-left">User</th>
+                  <th className="px-4 py-2 text-sm font-semibold text-left">Timestamp</th>
+                  <th className="px-4 py-2 text-sm font-semibold text-left">Action</th>
+                  <th className="px-4 py-2 text-sm font-semibold text-left">Description</th>
+                  <th className="px-4 py-2 text-sm font-semibold text-left">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredLogs.length > 0 ? (
-                  filteredLogs.map((log) => (
-                    <tr key={log.logId} className={`${isDarkMode ? 'border-gray-700' : 'border-gray-300'} border-t`}>
-                      <td className="p-4">{log.logId}</td>
-                      <td className="p-4">{log.username}</td>
-                      <td className="p-4">{log.action}</td>
-                      <td className="p-4 truncate max-w-xs">{log.description}</td>
-                      <td className="p-4">{log.timestamp}</td>
-                      <td className="p-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-white text-xs font-semibold ${getLogStatusColor(
-                            log.status
-                          )}`}
-                        >
-                          {log.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td className="p-4 text-center text-gray-500" colSpan="6">
-                      No logs found
+                {filteredLogs.map((log, index) => (
+                  <tr key={index} className={`border-b ${isDarkMode ? 'border-neutral-800' : 'border-gray-200'}`}>
+                    <td className="px-4 py-2 text-sm">{log.logId}</td>
+                    <td className="px-4 py-2 text-sm">{log.username}</td>
+                    <td className="px-4 py-2 text-sm">{log.timestamp}</td>
+                    <td className="px-4 py-2 text-sm">{log.action}</td>
+                    <td className="px-4 py-2 text-sm">{log.description}</td>
+                    <td className="px-4 py-2 text-sm">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getLogStatusColor(log.status)}`}>
+                        {log.status}
+                      </span>
                     </td>
                   </tr>
-                )}
+                ))}
               </tbody>
             </table>
           </div>

@@ -1,6 +1,5 @@
 export function downloadCSV(filename, rows) {
   if (!rows || rows.length === 0) {
-    alert("No data to export.");
     return;
   }
 

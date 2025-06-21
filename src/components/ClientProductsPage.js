@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Users, Search, Edit, Trash2, Plus, Copy } from 'lucide-react';
+import { Users, Search, Edit, Trash2, Plus, Copy, Sun, Moon } from 'lucide-react';
 import ActionsMenu from './ActionsMenu';
 import AddClientProductForm from './AddClientProductForm';
 import {
@@ -119,19 +119,29 @@ const filteredEntries = Object.entries(clientProductList).filter(([, value]) => 
 
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'}`} onClick={() => setIsActionsOpen(false)}>
+    <div className={`min-h-screen ${isDarkMode ? 'text-white bg-black' : 'text-black bg-gray-50'}`} onClick={() => setIsActionsOpen(false)}>
 
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
-        <button onClick={toggleDarkMode}
-          className={`w-20 h-10 flex items-center justify-center rounded-full border shadow-sm transition-all duration-300 hover:scale-105 active:scale-95 
-          ${isDarkMode ? 'bg-gray-800 border-gray-600 text-white hover:text-gray-300' : 'bg-white border-gray-300 text-black hover:text-gray-500'}`}>
-          {isDarkMode ? '🌙 Dark' : '☀️ Light'}
+      <div className="absolute top-4 right-4 z-50">
+        <button
+          onClick={toggleDarkMode}
+          className={`
+            p-2 rounded-full border shadow-sm transition-all duration-300 
+            hover:scale-105 active:scale-95 
+            hover:bg-gray-100 dark:hover:bg-neutral-800
+            ${
+              isDarkMode
+                ? 'text-neutral-200 bg-neutral-900 border-neutral-800 hover:text-neutral-100'
+                : 'text-gray-700 bg-white border-gray-300 hover:text-gray-300'
+            }
+          `}
+        >
+          {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
         </button>
       </div>
 
       {showForm && (
-  <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-    <div className={`p-4 rounded-lg w-full max-w-xl ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}>
+  <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-40">
+    <div className={`p-4 rounded-lg w-full max-w-xl ${isDarkMode ? 'text-white bg-neutral-900' : 'text-black bg-white'}`}>
       <AddClientProductForm
         clients={clients}
         initialData={editData}
@@ -143,22 +153,22 @@ const filteredEntries = Object.entries(clientProductList).filter(([, value]) => 
 )}
 
 
-      <div className={`px-6 py-4 border-b ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-        <div className="flex items-center justify-between">
+      <div className={`px-6 py-4 border-b ${isDarkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
+        <div className="flex justify-between items-center">
           <h1 className="text-2xl font-semibold">Client Products</h1>
-          <button onClick={handleOpenAdd} className="flex items-center gap-2 px-4 py-2 text-white bg-gray-900 rounded-lg hover:bg-gray-800">
+          <button onClick={handleOpenAdd} className={`flex gap-2 items-center px-4 py-2 mr-16 rounded-lg ${isDarkMode ? 'text-white bg-neutral-800 hover:bg-neutral-700' : 'text-white bg-gray-900 hover:bg-gray-800'}`}>
             <Plus size={16} /> Add Mapping
           </button>
         </div>
       </div>
 
       <div className="p-6" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <Users className="text-gray-500 dark:text-gray-400" size={20} />
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex gap-3 items-center">
+            <Users className="text-gray-500 dark:text-neutral-400" size={20} />
             <div>
               <h2 className="text-xl font-semibold">Client View</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">See which products are used by each client</p>
+              <p className="text-sm text-gray-500 dark:text-neutral-400">See which products are used by each client</p>
             </div>
           </div>
         </div>
@@ -171,12 +181,12 @@ const filteredEntries = Object.entries(clientProductList).filter(([, value]) => 
             isDarkMode={isDarkMode} 
           />
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <Search className="absolute left-3 top-1/2 text-gray-400 -translate-y-1/2" size={16} />
             <input
               type="text"
               placeholder="Search name or product..."
               className={`w-64 py-2 pl-10 pr-4 border rounded-lg outline-none transition focus:ring-2 focus:ring-blue-500 
-              ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-300' : 'bg-white border-gray-300 text-black placeholder-gray-500'}`}
+              ${isDarkMode ? 'placeholder-neutral-400 text-neutral-200 bg-neutral-800 border-neutral-700' : 'placeholder-gray-500 text-black bg-white border-gray-300'}`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -187,7 +197,7 @@ const filteredEntries = Object.entries(clientProductList).filter(([, value]) => 
           {filteredEntries.map(([clientId, value], index) => (
             <div
               key={clientId}
-              className={`p-6 transition-all duration-300 border rounded-lg shadow-sm hover:scale-[1.02] ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`}
+              className={`p-6 transition-all duration-300 border rounded-lg shadow-sm hover:scale-[1.02] ${isDarkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-300'}`}
             >
               <div className="flex justify-between mb-2">
                 <div>

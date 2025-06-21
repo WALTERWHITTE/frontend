@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Edit, Trash2, Plus, Copy, Bookmark } from 'lucide-react';
+import { Search, Edit, Trash2, Plus, Copy, Bookmark, Sun, Moon } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import AddTemplateForm from './AddTemplateForm';
 import ActionsMenu from './ActionsMenu';
@@ -84,29 +84,30 @@ const TemplateDashboard = () => {
   return (
     <div className={`${isDarkMode ? 'dark' : ''}`}>
       <div
-        className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}
+        className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-black text-neutral-200' : 'text-gray-900 bg-gray-50'}`}
         onClick={() => setIsActionsOpen(false)}
       >
-        {/* Dark Mode Toggle */}
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
+        <div className="absolute top-4 right-4 z-50">
           <button
-  onClick={toggleDarkMode}
-  className={`
-    w-20 h-10 flex items-center justify-center rounded-full border shadow-sm transition-all duration-300 
-    hover:scale-105 active:scale-95 
-    hover:bg-gray-100 dark:hover:bg-gray-700
-    ${isDarkMode 
-    ? 'bg-gray-800 text-gray-100 border-gray-600 hover:text-gray-300' 
-    : 'bg-white text-gray-700 border-gray-300 hover:text-gray-300'}
-  `}
->
-  {isDarkMode ? '🌙 Dark' : '☀️ Light'}
-</button>
+            onClick={toggleDarkMode}
+            className={`
+              p-2 rounded-full border shadow-sm transition-all duration-300 
+              hover:scale-105 active:scale-95 
+              hover:bg-gray-100 dark:hover:bg-neutral-800
+              ${
+                isDarkMode
+                  ? 'text-neutral-200 bg-neutral-900 border-neutral-800 hover:text-neutral-100'
+                  : 'text-gray-700 bg-white border-gray-300 hover:text-gray-300'
+              }
+            `}
+          >
+            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
         </div>
 
         {/* Add Template Modal */}
         {showAddForm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm animate-fadeIn">
+          <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50 backdrop-blur-sm animate-fadeIn">
             <AddTemplateForm
               onCancel={() => {
                 setShowAddForm(false);
@@ -120,15 +121,15 @@ const TemplateDashboard = () => {
         )}
 
         {/* Header */}
-        <div className={`px-6 py-4 border-b ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-          <div className="flex items-center justify-between">
+        <div className={`px-6 py-4 border-b ${isDarkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
+          <div className="flex justify-between items-center">
             <h1 className="text-2xl font-semibold">Template Dashboard</h1>
             <button
               onClick={() => {
                 setShowAddForm(true);
                 setEditingTemplate(null);
               }}
-              className="flex items-center gap-2 px-4 py-2 text-white bg-gray-900 rounded-lg hover:bg-gray-800"
+              className={`flex gap-2 items-center px-4 py-2 mr-16 rounded-lg ${isDarkMode ? 'text-white bg-neutral-800 hover:bg-neutral-700' : 'text-white bg-gray-900 hover:bg-gray-800'}`}
             >
               <Plus size={16} /> Add Template
             </button>
@@ -136,37 +137,34 @@ const TemplateDashboard = () => {
         </div>
 
         <div className="p-6" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <Bookmark className="text-gray-500 dark:text-gray-400" size={20} />
+          <div className="flex justify-between items-center mb-8">
+            <div className="flex gap-3 items-center">
+              <Bookmark className="text-gray-500 dark:text-neutral-400" size={20} />
               <div>
                 <h2 className="text-xl font-semibold">Templates</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Manage your email templates</p>
+                <p className="text-sm text-gray-500 dark:text-neutral-400">Manage your email templates</p>
               </div>
             </div>
 
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-             <input
-  type="text"
-  placeholder="Search templates..."
-  value={searchTerm}
-  onChange={(e) => setSearchTerm(e.target.value)}
-  className={`
-    w-64 py-2 pl-10 pr-4 border rounded-lg outline-none transition focus:ring-2 focus:ring-blue-500
-    ${isDarkMode 
-      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-300' 
-      : 'bg-white border-gray-300 text-black placeholder-gray-500'
-    }
-  `}
-/>
-
-
-
+              <Search className="absolute left-3 top-1/2 text-gray-400 -translate-y-1/2" size={16} />
+              <input
+                type="text"
+                placeholder="Search templates..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={`
+                  w-64 py-2 pl-10 pr-4 border rounded-lg outline-none transition focus:ring-2 focus:ring-blue-500
+                  ${isDarkMode 
+                    ? 'placeholder-neutral-400 text-neutral-200 bg-neutral-800 border-neutral-700' 
+                    : 'placeholder-gray-500 text-black bg-white border-gray-300'
+                  }
+                `}
+              />
             </div>
           </div>
 
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex justify-between items-center mb-6">
             <ActionsMenu
               isOpen={isActionsOpen}
               onToggle={() => setIsActionsOpen(!isActionsOpen)}
@@ -178,12 +176,12 @@ const TemplateDashboard = () => {
             {filteredTemplates.map((template) => (
               <div
                 key={template.templateId}
-                className={`p-4 border rounded-lg shadow-sm transform transition-all duration-300 hover:scale-[1.02] hover:shadow-md cursor-pointer animate-fadeIn ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`}
+                className={`p-4 border rounded-lg shadow-sm transform transition-all duration-300 hover:scale-[1.02] hover:shadow-md cursor-pointer animate-fadeIn ${isDarkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-300'}`}
               >
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex justify-between items-center mb-2">
                   <div>
                     <h3 className="text-lg font-semibold">{template.templateName}</h3>
-                    <p className="text-xs text-gray-300 dark:text-gray-500">ID: {template.templateId}</p>
+                    <p className="text-xs text-gray-300 dark:text-neutral-500">ID: {template.templateId}</p>
                   </div>
 
                   <div className="flex gap-2">
@@ -193,12 +191,12 @@ const TemplateDashboard = () => {
                   </div>
                 </div>
 
-                <p className="text-sm text-gray-600 dark:text-gray-500 mb-1">Subject: {template.subject}</p>
+                <p className="mb-1 text-sm text-gray-600 dark:text-neutral-400">Subject: {template.subject}</p>
                 <div
-                  className="text-xs text-gray-500 dark:text-gray-400 prose max-w-none dark:prose-invert"
+                  className="max-w-none text-xs text-gray-500 dark:text-neutral-400 prose dark:prose-invert"
                   dangerouslySetInnerHTML={{
                     __html: DOMPurify.sanitize(template.content)
-                      .replace(/\$\{(\w+)\}/g, '<span class="bg-gray-600 text-white px-1 rounded">$1</span>')
+                      .replace(/\$\{(\w+)\}/g, '<span class="px-1 text-white rounded bg-neutral-700">$1</span>')
                   }}
                 ></div>
               </div>
